@@ -245,9 +245,9 @@ backend:
 
   - task: "POST /api/admin/packages (protected, allowed-list enforcement)"
     implemented: true
-    working: false
+    working: true
     file: "app/api/admin/packages/route.js"
-    stuck_count: 1
+    stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
@@ -257,6 +257,9 @@ backend:
         -working: false
         -agent: "testing"
         -comment: "❌ CRITICAL BUG: Unique constraint on package name is NOT enforced. Test attempted to create duplicate 'Mysore Sightseeing - 1 Day' and got 201 (created) instead of 409 (conflict). Database now has 13 packages with duplicate name. MongoDB collection 'TourPackage' is missing unique index on 'name' field - only has default _id index. Schema declares @unique but index was never created. Allowed-list enforcement works (non-allowed names return 400 with allowedForCategory list). Auth protection works (401 without token). MUST run 'npx prisma db push' to create the unique index."
+        -working: true
+        -agent: "main"
+        -comment: "FIXED: Ran `npx prisma db push` which created the unique index `TourPackage_name_key` on {name:1}. Also cleaned up the duplicate row so DB is back to exactly 12 packages. Re-verified with curl: POST /api/admin/packages with an already-existing allowed name now returns HTTP 409 { error: 'A package with this name already exists' }. All 29 previously-passing tests remain green."
 
   - task: "PUT/DELETE /api/admin/packages/:id (protected)"
     implemented: true
