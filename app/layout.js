@@ -1,5 +1,6 @@
 import './globals.css'
 import { Playfair_Display, Inter, Cormorant_Garamond } from 'next/font/google'
+import ExternalLinkGate from '@/components/ExternalLinkGate'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' })
 const playfair = Playfair_Display({ subsets: ['latin'], variable: '--font-playfair', display: 'swap' })
@@ -15,6 +16,7 @@ export default function RootLayout({ children }) {
     <html lang="en" className={`${inter.variable} ${playfair.variable} ${cormorant.variable}`}>
       <body className="bg-[#eaf3ff] text-slate-900 antialiased overflow-x-hidden">
         {children}
+        <ExternalLinkGate />
       </body>
     </html>
   )
