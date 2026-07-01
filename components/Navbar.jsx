@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { Phone, MessageCircle, Menu, X, ArrowRight, ChevronDown } from 'lucide-react'
 import Logo from './Logo'
 import { motion, AnimatePresence } from 'framer-motion'
+import { externalLinkProps, SOCIAL } from '@/lib/externalLink'
 
 const NAV = [
   { label: 'Home', href: '/' },
@@ -52,7 +53,7 @@ export default function Navbar() {
           </nav>
           <div className="hidden md:flex items-center gap-2">
             <a href="tel:9945883774" className="w-10 h-10 rounded-full bg-white ring-1 ring-emerald-700/20 shadow-sm flex items-center justify-center text-emerald-800 hover:scale-105 transition"><Phone className="w-4 h-4"/></a>
-            <a href="https://wa.me/919945883774" target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-white ring-1 ring-emerald-700/20 shadow-sm flex items-center justify-center text-emerald-800 hover:scale-105 transition"><MessageCircle className="w-4 h-4"/></a>
+            <a {...externalLinkProps(SOCIAL.whatsapp())} className="w-10 h-10 rounded-full bg-white ring-1 ring-emerald-700/20 shadow-sm flex items-center justify-center text-emerald-800 hover:scale-105 transition"><MessageCircle className="w-4 h-4"/></a>
             <Link href="/contact" className="btn-primary rounded-full px-5 py-2.5 text-sm font-semibold flex items-center gap-2">Book Now <ArrowRight className="w-4 h-4"/></Link>
           </div>
           <button onClick={() => setOpen(v => !v)} className="lg:hidden w-10 h-10 rounded-full glass flex items-center justify-center">
@@ -69,7 +70,7 @@ export default function Navbar() {
               ))}
               <div className="flex gap-2 pt-2">
                 <a href="tel:9945883774" className="flex-1 btn-outline rounded-full px-4 py-2.5 text-sm font-semibold text-center">Call</a>
-                <a href="https://wa.me/919945883774" className="flex-1 btn-primary rounded-full px-4 py-2.5 text-sm font-semibold text-center">WhatsApp</a>
+                <a {...externalLinkProps(SOCIAL.whatsapp())} className="flex-1 btn-primary rounded-full px-4 py-2.5 text-sm font-semibold text-center">WhatsApp</a>
               </div>
             </div>
           </motion.div>

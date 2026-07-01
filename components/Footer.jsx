@@ -2,6 +2,7 @@
 import Link from 'next/link'
 import { Instagram, Facebook, Mail, Phone, MapPin } from 'lucide-react'
 import Logo from './Logo'
+import { externalLinkProps, SOCIAL } from '@/lib/externalLink'
 
 export default function Footer() {
   return (
@@ -14,8 +15,9 @@ export default function Footer() {
           </div>
           <p className="mt-4 text-sm text-emerald-100/80 leading-relaxed">From sacred pilgrimages to stunning international getaways — we craft unforgettable journeys tailored just for you.</p>
           <div className="flex gap-3 mt-5">
-            <a href="https://www.instagram.com/saishubholidays2026/" target="_blank" rel="noreferrer" className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition"><Instagram className="w-4 h-4"/></a>
-            <a href="https://www.facebook.com/profile.php?id=61590662553881" target="_blank" rel="noreferrer" className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition"><Facebook className="w-4 h-4"/></a>
+            <a {...externalLinkProps(SOCIAL.instagram)} className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition"><Instagram className="w-4 h-4"/></a>
+            <a {...externalLinkProps(SOCIAL.facebook)} className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition"><Facebook className="w-4 h-4"/></a>
+            <a {...externalLinkProps(SOCIAL.whatsapp())} className="w-9 h-9 rounded-full bg-emerald-600 hover:bg-emerald-500 flex items-center justify-center transition" title="WhatsApp"><svg viewBox="0 0 24 24" className="w-4 h-4 fill-white"><path d="M20.5 3.5A11.9 11.9 0 0 0 12 0C5.4 0 .1 5.3.1 11.9c0 2.1.5 4.1 1.6 5.9L0 24l6.4-1.7a11.9 11.9 0 0 0 5.6 1.4h.1c6.6 0 11.9-5.3 11.9-11.9 0-3.2-1.2-6.2-3.5-8.3zM12 21.6a9.8 9.8 0 0 1-5-1.4l-.4-.2-3.8 1 1-3.7-.2-.4A9.7 9.7 0 0 1 2.3 12C2.3 6.6 6.7 2.2 12 2.2S21.7 6.6 21.7 12 17.3 21.6 12 21.6zm5.4-7.3c-.3-.1-1.7-.9-2-1s-.5-.1-.7.2-.7 1-1 1.2-.4.2-.7 0c-.3-.1-1.2-.5-2.3-1.4-.9-.8-1.4-1.8-1.6-2.1s0-.5.1-.6l.5-.5.2-.4c.1-.1.1-.3 0-.4l-.9-2.1c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.4s-.9.9-.9 2.2.9 2.6 1 2.7c.1.2 1.8 2.7 4.4 3.8l1.5.6c.6.2 1.2.2 1.6.1.5-.1 1.7-.7 1.9-1.4.2-.7.2-1.2.2-1.3-.1-.1-.3-.2-.6-.3z"/></svg></a>
           </div>
         </div>
         <div>

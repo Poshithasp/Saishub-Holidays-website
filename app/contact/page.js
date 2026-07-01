@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { MapPin, Phone, Mail, Instagram, Facebook, Send, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
 import PageShell from '@/components/PageShell'
 import api from '@/lib/api'
+import { externalLinkProps, SOCIAL } from '@/lib/externalLink'
 
 export default function ContactPage() {
   const [status, setStatus] = useState({ state: 'idle', message: '' }) // idle | sending | sent | error
@@ -57,9 +58,9 @@ export default function ContactPage() {
             </div>
           </div>
           <div className="flex gap-3 pt-2">
-            <a href="https://www.instagram.com/saishubholidays2026/" target="_blank" rel="noreferrer" className="w-11 h-11 rounded-full bg-white ring-1 ring-emerald-700/15 flex items-center justify-center text-emerald-800 hover:scale-110 transition"><Instagram className="w-5 h-5"/></a>
-            <a href="https://www.facebook.com/profile.php?id=61590662553881" target="_blank" rel="noreferrer" className="w-11 h-11 rounded-full bg-white ring-1 ring-emerald-700/15 flex items-center justify-center text-emerald-800 hover:scale-110 transition"><Facebook className="w-5 h-5"/></a>
-            <a href="https://wa.me/919945883774" target="_blank" rel="noreferrer" className="px-4 rounded-full bg-emerald-700 text-white flex items-center justify-center text-sm font-semibold hover:bg-emerald-800 transition">WhatsApp Us</a>
+            <a {...externalLinkProps(SOCIAL.instagram)} className="w-11 h-11 rounded-full bg-white ring-1 ring-emerald-700/15 flex items-center justify-center text-emerald-800 hover:scale-110 transition"><Instagram className="w-5 h-5"/></a>
+            <a {...externalLinkProps(SOCIAL.facebook)} className="w-11 h-11 rounded-full bg-white ring-1 ring-emerald-700/15 flex items-center justify-center text-emerald-800 hover:scale-110 transition"><Facebook className="w-5 h-5"/></a>
+            <a {...externalLinkProps(SOCIAL.whatsapp('Hi Saishubh Holidays, I would like to enquire about a trip.'))} className="px-4 rounded-full bg-emerald-700 text-white flex items-center justify-center text-sm font-semibold hover:bg-emerald-800 transition">WhatsApp Us</a>
           </div>
           <div className="rounded-2xl overflow-hidden ring-1 ring-white/60 shadow-lg">
             <iframe title="Saishub Holidays Location" src="https://www.google.com/maps?q=108,+Dr+Rajkumar+Rd,+near+Navrang+Theatre,+Rajajinagar,+Bengaluru,+Karnataka+560010&output=embed" className="w-full h-64 border-0" loading="lazy"/>

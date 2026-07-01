@@ -9,6 +9,7 @@ import Footer from '@/components/Footer'
 import FloatingActions from '@/components/FloatingActions'
 import SkyBackdrop from '@/components/SkyBackdrop'
 import AnimatedCounter from '@/components/AnimatedCounter'
+import { externalLinkProps, SOCIAL } from '@/lib/externalLink'
 
 const EarthScene = dynamic(() => import('@/components/EarthScene'), { ssr: false, loading: () => null })
 
@@ -304,7 +305,7 @@ export default function Home() {
               <p className="mt-5 text-emerald-50/90 max-w-lg">Tell us where you dream, and we will design the itinerary, book the stays, arrange the flights and be with you every mile of the way.</p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link href="/contact" className="btn-primary rounded-full px-6 py-3.5 text-sm font-semibold flex items-center gap-2">Book Now <ArrowRight className="w-4 h-4"/></Link>
-                <a href="https://wa.me/919945883774" target="_blank" rel="noreferrer" className="rounded-full px-6 py-3.5 text-sm font-semibold bg-white text-emerald-900 flex items-center gap-2">WhatsApp Us</a>
+                <a {...externalLinkProps(SOCIAL.whatsapp('Hi Saishubh Holidays, I would like to plan a trip.'))} className="rounded-full px-6 py-3.5 text-sm font-semibold bg-white text-emerald-900 flex items-center gap-2">WhatsApp Us</a>
               </div>
             </div>
           </motion.div>

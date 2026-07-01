@@ -6,6 +6,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { MapPin, Calendar, Sparkles, Check, X as XIcon, ArrowLeft, ArrowRight, Compass } from 'lucide-react'
 import PageShell from '@/components/PageShell'
 import api from '@/lib/api'
+import { externalLinkProps, SOCIAL } from '@/lib/externalLink'
 
 export default function PackageDetailPage() {
   const { id } = useParams()
@@ -117,7 +118,7 @@ export default function PackageDetailPage() {
               <p className="text-sm text-slate-600 mt-2">Talk to our concierge for a personalized quote and travel plan.</p>
               <div className="mt-4 flex flex-col gap-2">
                 <Link href={`/contact?package=${encodeURIComponent(pkg.name)}`} className="btn-primary rounded-full px-5 py-3 text-sm font-semibold flex items-center justify-center gap-2">Send Enquiry <ArrowRight className="w-4 h-4"/></Link>
-                <a href={`https://wa.me/919945883774?text=${encodeURIComponent('Hi, I would like to know more about the ' + pkg.name + ' package.')}`} target="_blank" rel="noreferrer" className="btn-outline rounded-full px-5 py-3 text-sm font-semibold text-center">WhatsApp Us</a>
+                <a {...externalLinkProps(SOCIAL.whatsapp('Hi, I would like to know more about the ' + pkg.name + ' package.'))} className="btn-outline rounded-full px-5 py-3 text-sm font-semibold text-center">WhatsApp Us</a>
                 <a href="tel:9945883774" className="rounded-full px-5 py-3 text-sm font-semibold text-center bg-white text-emerald-900 ring-1 ring-emerald-700/15">Call: +91 99458 83774</a>
               </div>
             </div>
