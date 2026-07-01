@@ -77,10 +77,16 @@ function DestinationCard({ item, gold=false }) {
 
 export default function Home() {
   const mouseRef = useRef({ x: 0, y: 0 })
+  const scrollProgressRef = useRef(0)
   const heroRef = useRef(null)
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] })
   const heroScale = useTransform(scrollYProgress, [0, 1], [1, 1.35])
   const heroOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0])
+
+  useEffect(() => {
+    const unsub = scrollYProgress.on('change', (v) => { scrollProgressRef.current = v })
+    return () => unsub()
+  }, [scrollYProgress])
 
   useEffect(() => {
     const onMove = (e) => {
@@ -104,7 +110,7 @@ export default function Home() {
         <motion.div style={{ scale: heroScale, opacity: heroOpacity }} className="absolute inset-0 z-10">
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="w-[95vw] md:w-[70vw] lg:w-[55vw] h-[60vh] md:h-[85vh] translate-x-0 md:translate-x-[10%] translate-y-4">
-              <EarthScene mouseRef={mouseRef}/>
+              <EarthScene mouseRef={mouseRef} scrollRef={scrollProgressRef}/>
             </div>
           </div>
         </motion.div>
