@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { LogOut, Package, MessageSquare, Image as ImageIcon, Mail, Home, Loader2, Trash2, Plus, Check, Edit3, Upload, X, Star, Search, Save, ExternalLink, RefreshCw } from 'lucide-react'
 import api from '@/lib/api'
+import ItineraryEditor from '@/components/admin/ItineraryEditor'
+import MultiImageUpload from '@/components/admin/MultiImageUpload'
 
 const TABS = [
   { key: 'packages', label: 'Tour Packages', icon: Package },
@@ -148,7 +150,7 @@ function PackageEditModal({ token, pkg, onClose, onSaved }) {
     inclusions: Array.isArray(pkg.inclusions) ? pkg.inclusions.join('\n') : '',
     exclusions: Array.isArray(pkg.exclusions) ? pkg.exclusions.join('\n') : '',
     gallery: Array.isArray(pkg.gallery) ? pkg.gallery.join('\n') : '',
-    itineraryJson: JSON.stringify(pkg.itinerary || [], null, 2),
+    itinerary: Array.isArray(pkg.itinerary) ? pkg.itinerary : [],
     mapUrl: pkg.mapUrl || '',
     isActive: pkg.isActive,
   })
@@ -158,8 +160,6 @@ function PackageEditModal({ token, pkg, onClose, onSaved }) {
   const save = async () => {
     setErr(''); setSaving(true)
     try {
-      let itinerary
-      try { itinerary = JSON.parse(form.itineraryJson) } catch { throw new Error('Itinerary must be valid JSON array') }
       const body = {
         duration: form.duration,
         startingLocation: form.startingLocation,
@@ -168,7 +168,11 @@ function PackageEditModal({ token, pkg, onClose, onSaved }) {
         inclusions: form.inclusions.split('\n').map(s => s.trim()).filter(Boolean),
         exclusions: form.exclusions.split('\n').map(s => s.trim()).filter(Boolean),
         gallery: form.gallery.split('\n').map(s => s.trim()).filter(Boolean),
-        itinerary,
+        itinerary: form.itinerary.map((d, i) => ({
+          day: i + 1,
+          title: (d.title || '').trim(),
+          activities: (d.activities || []).map(a => a.trim()).filter(Boolean),
+        })).filter(d => d.title || d.activities.length),
         mapUrl: form.mapUrl || null,
         isActive: form.isActive,
       }
@@ -189,13 +193,16 @@ function PackageEditModal({ token, pkg, onClose, onSaved }) {
       <TextArea label="Inclusions (one per line)" value={form.inclusions} onChange={v => setForm(f => ({...f, inclusions: v}))} rows={3}/>
       <TextArea label="Exclusions (one per line)" value={form.exclusions} onChange={v => setForm(f => ({...f, exclusions: v}))} rows={3}/>
       <TextArea label="Gallery image URLs (one per line)" value={form.gallery} onChange={v => setForm(f => ({...f, gallery: v}))} rows={3}/>
-      <TextArea label="Itinerary (JSON array)" value={form.itineraryJson} onChange={v => setForm(f => ({...f, itineraryJson: v}))} rows={10} mono/>
-      <label className="flex items-center gap-2 text-sm mt-3">
+      <div className="mt-3">
+        <div className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Day-wise Itinerary</div>
+        <ItineraryEditor value={form.itinerary} onChange={itinerary => setForm(f => ({ ...f, itinerary }))}/>
+      </div>
+      <label className="flex items-center gap-2 text-sm mt-4">
         <input type="checkbox" checked={form.isActive} onChange={e => setForm(f => ({...f, isActive: e.target.checked}))} className="w-4 h-4 accent-emerald-700"/>
         Active (visible on site)
       </label>
       {err && <div className="text-red-600 text-sm mt-3">{err}</div>}
-      <div className="mt-6 flex gap-2 justify-end">
+      <div className="mt-6 flex gap-2 justify-end sticky bottom-0 bg-white pt-3">
         <button onClick={onClose} className="px-5 py-2 rounded-full bg-slate-100 hover:bg-slate-200 text-sm font-semibold">Cancel</button>
         <button disabled={saving} onClick={save} className="btn-primary rounded-full px-5 py-2 text-sm font-semibold flex items-center gap-2">{saving ? <>Saving <Loader2 className="w-4 h-4 animate-spin"/></> : <>Save <Save className="w-4 h-4"/></>}</button>
       </div>
@@ -292,7 +299,6 @@ function TestimonialsTab({ token }) {
 /* ---------------- GALLERY ---------------- */
 function GalleryTab({ token }) {
   const [items, setItems] = useState(null)
-  const [uploading, setUploading] = useState(false)
   const [category, setCategory] = useState('General')
 
   const load = useCallback(() => {
@@ -300,18 +306,6 @@ function GalleryTab({ token }) {
     api.getGallery().then(d => setItems(d.gallery || [])).catch(()=>setItems([]))
   }, [])
   useEffect(load, [load])
-
-  const onFile = async (e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setUploading(true)
-    try {
-      const up = await api.adminUpload(token, file)
-      const publicUrl = `${window.location.origin}${up.url}`
-      await api.adminCreateGallery(token, { imageUrl: publicUrl, category })
-      load()
-    } catch (e) { alert(e.message) } finally { setUploading(false); e.target.value = '' }
-  }
 
   const del = async (id) => {
     if (!confirm('Remove this image from gallery?')) return
@@ -326,21 +320,24 @@ function GalleryTab({ token }) {
           <h2 className="font-display text-3xl font-bold hero-gradient-text">Gallery</h2>
         </div>
         <div className="flex items-center gap-2">
+          <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Category:</label>
           <select value={category} onChange={e => setCategory(e.target.value)} className="px-3 py-2 rounded-full bg-white ring-1 ring-slate-200 text-sm">
             <option>General</option>
             <option>Domestic</option>
             <option>International</option>
             <option>Pilgrimage</option>
           </select>
-          <label className={`btn-primary rounded-full px-5 py-2.5 text-sm font-semibold cursor-pointer flex items-center gap-2 ${uploading ? 'opacity-70 pointer-events-none' : ''}`}>
-            {uploading ? <><Loader2 className="w-4 h-4 animate-spin"/>Uploading…</> : <><Upload className="w-4 h-4"/> Upload Image</>}
-            <input type="file" accept="image/*" onChange={onFile} className="hidden"/>
-          </label>
         </div>
       </div>
 
+      <div className="bg-white rounded-2xl p-5 shadow-sm ring-1 ring-slate-100 mb-6">
+        <MultiImageUpload token={token} category={category} onDone={() => load()}/>
+      </div>
+
+      <h3 className="font-display text-xl font-bold text-emerald-900 mb-3">Current Gallery ({items?.length ?? 0})</h3>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {items === null && Array.from({length:8}).map((_,i)=><div key={i} className="aspect-square rounded-xl bg-white/70 animate-pulse"/>)}
+        {items && items.length === 0 && <div className="col-span-full text-center text-slate-400 text-sm py-10">No images yet.</div>}
         {items && items.map(g => (
           <div key={g.id} className="group relative rounded-xl overflow-hidden aspect-square bg-slate-100 ring-1 ring-slate-100">
             <img src={g.imageUrl} alt="" className="absolute inset-0 w-full h-full object-cover"/>

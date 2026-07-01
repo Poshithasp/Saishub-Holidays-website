@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { notifyNewEnquiry } from '@/lib/notifications'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,6 +31,10 @@ export async function POST(request) {
         travelDate: travelDate ? String(travelDate).trim() : null,
       },
     })
+
+    // Fire-and-forget notifications (email + WhatsApp).
+    // Failures are logged but never block the user.
+    notifyNewEnquiry(enquiry).catch(err => console.error('[notify] unhandled', err))
 
     return NextResponse.json({ ok: true, enquiry }, { status: 201 })
   } catch (e) {
