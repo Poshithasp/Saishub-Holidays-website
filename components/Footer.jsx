@@ -9,7 +9,9 @@ export default function Footer() {
       <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-amber-400/60 to-transparent"/>
       <div className="max-w-[1400px] mx-auto px-6 md:px-10 py-16 grid md:grid-cols-4 gap-10">
         <div className="md:col-span-1">
-          <Logo light />
+          <div className="inline-block rounded-2xl bg-white/95 px-4 py-3 shadow-lg">
+            <Logo/>
+          </div>
           <p className="mt-4 text-sm text-emerald-100/80 leading-relaxed">From sacred pilgrimages to stunning international getaways — we craft unforgettable journeys tailored just for you.</p>
           <div className="flex gap-3 mt-5">
             <a href="https://www.instagram.com/saishubholidays2026/" target="_blank" rel="noreferrer" className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition"><Instagram className="w-4 h-4"/></a>
