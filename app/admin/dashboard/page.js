@@ -26,7 +26,12 @@ export default function AdminDashboard() {
     setAdmin(a ? JSON.parse(a) : null)
   }, [router])
 
-  const logout = () => { localStorage.removeItem('sh_token'); localStorage.removeItem('sh_admin'); router.replace('/admin') }
+  const logout = () => {
+    localStorage.removeItem('sh_token')
+    localStorage.removeItem('sh_admin')
+    document.cookie = 'sh_token=; path=/; max-age=0; SameSite=Lax'
+    router.replace('/admin')
+  }
 
   if (!token) {
     return <div className="min-h-screen flex items-center justify-center sky-bg"><Loader2 className="w-6 h-6 animate-spin text-emerald-700"/></div>

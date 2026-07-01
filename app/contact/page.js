@@ -1,10 +1,10 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { MapPin, Phone, Mail, Instagram, Facebook, Send, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
+import { MapPin, Phone, Mail, Instagram, Facebook, Send, CheckCircle2, AlertCircle, Loader2, MessageCircle } from 'lucide-react'
 import PageShell from '@/components/PageShell'
 import api from '@/lib/api'
-import { externalLinkProps, SOCIAL } from '@/lib/externalLink'
+import { externalLinkProps, openExternal, SOCIAL } from '@/lib/externalLink'
 
 export default function ContactPage() {
   const [status, setStatus] = useState({ state: 'idle', message: '' }) // idle | sending | sent | error
@@ -23,8 +23,21 @@ export default function ContactPage() {
     try {
       await api.postEnquiry(form)
       setStatus({ state: 'sent', message: 'Thank you! We will reach out to you shortly.' })
+      // Also open WhatsApp with a prefilled message summarising the enquiry
+      const parts = [
+        `Hi Saishubh Holidays, I just submitted an enquiry:`,
+        `\u2022 Name: ${form.name}`,
+        form.phone ? `\u2022 Phone: ${form.phone}` : null,
+        form.email ? `\u2022 Email: ${form.email}` : null,
+        form.packageName ? `\u2022 Package: ${form.packageName}` : null,
+        form.travelDate ? `\u2022 Travel: ${form.travelDate}` : null,
+        form.message ? `\u2022 Message: ${form.message}` : null,
+        `\nLooking forward to your response.`,
+      ].filter(Boolean).join('\n')
+      // Small delay so user sees the success state before redirect
+      setTimeout(() => { openExternal(SOCIAL.whatsapp(parts)) }, 600)
       setForm({ name: '', phone: '', email: '', packageName: '', travelDate: '', message: '' })
-      setTimeout(() => setStatus({ state: 'idle', message: '' }), 5000)
+      setTimeout(() => setStatus({ state: 'idle', message: '' }), 6000)
     } catch (err) {
       setStatus({ state: 'error', message: err.message || 'Something went wrong. Please try again.' })
     }

@@ -26,6 +26,9 @@ export default function AdminLoginPage() {
       const res = await api.login(username, password)
       localStorage.setItem('sh_token', res.token)
       localStorage.setItem('sh_admin', JSON.stringify(res.admin))
+      // Also set cookie client-side so middleware picks it up on the next request
+      const week = 7 * 24 * 60 * 60
+      document.cookie = `sh_token=${res.token}; path=/; max-age=${week}; SameSite=Lax; Secure`
       router.replace('/admin/dashboard')
     } catch (e) {
       setErr(e.message || 'Login failed')
