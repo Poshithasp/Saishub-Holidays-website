@@ -1,12 +1,34 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { MapPin, Phone, Mail, Instagram, Facebook, Send, CheckCircle2 } from 'lucide-react'
+import { MapPin, Phone, Mail, Instagram, Facebook, Send, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
 import PageShell from '@/components/PageShell'
+import api from '@/lib/api'
 
 export default function ContactPage() {
-  const [sent, setSent] = useState(false)
-  const onSubmit = (e) => { e.preventDefault(); setSent(true); setTimeout(()=>setSent(false), 4000) }
+  const [status, setStatus] = useState({ state: 'idle', message: '' }) // idle | sending | sent | error
+  const [form, setForm] = useState({ name: '', phone: '', email: '', packageName: '', travelDate: '', message: '' })
+  const [packages, setPackages] = useState([])
+
+  useEffect(() => {
+    api.getPackages().then(d => setPackages(d.packages || [])).catch(() => setPackages([]))
+  }, [])
+
+  const onChange = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }))
+
+  const onSubmit = async (e) => {
+    e.preventDefault()
+    setStatus({ state: 'sending', message: '' })
+    try {
+      await api.postEnquiry(form)
+      setStatus({ state: 'sent', message: 'Thank you! We will reach out to you shortly.' })
+      setForm({ name: '', phone: '', email: '', packageName: '', travelDate: '', message: '' })
+      setTimeout(() => setStatus({ state: 'idle', message: '' }), 5000)
+    } catch (err) {
+      setStatus({ state: 'error', message: err.message || 'Something went wrong. Please try again.' })
+    }
+  }
+
   return (
     <PageShell eyebrow="Get in touch" title={<>Plan your <span className="gold-script font-serif-alt italic">next escape</span></>} subtitle="Tell us where you dream. Our concierge team will design a bespoke itinerary just for you.">
       <div className="max-w-[1400px] mx-auto px-6 md:px-10 grid lg:grid-cols-5 gap-8">
@@ -47,19 +69,27 @@ export default function ContactPage() {
         <motion.form initial={{opacity:0,y:20}} whileInView={{opacity:1,y:0}} viewport={{once:true}} onSubmit={onSubmit} className="lg:col-span-3 glass rounded-3xl p-8 space-y-4">
           <div className="font-display text-2xl text-emerald-900 font-bold">Enquire about a trip</div>
           <div className="grid md:grid-cols-2 gap-4">
-            <Field label="Full name" placeholder="John Doe"/>
-            <Field label="Phone" placeholder="+91 —"/>
-            <Field label="Email" placeholder="you@email.com" type="email"/>
-            <Field label="Destination" placeholder="e.g. Bali"/>
-            <Field label="Travel Date" placeholder="MM/YYYY"/>
-            <Field label="Travellers" placeholder="2 Adults, 1 Child"/>
+            <Field label="Full name*" value={form.name} onChange={onChange('name')} placeholder="John Doe" required/>
+            <Field label="Phone*" value={form.phone} onChange={onChange('phone')} placeholder="+91 —" required/>
+            <Field label="Email" value={form.email} onChange={onChange('email')} type="email" placeholder="you@email.com"/>
+            <label className="block">
+              <div className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Package Interested In</div>
+              <select value={form.packageName} onChange={onChange('packageName')} className="w-full rounded-2xl bg-white/80 border border-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+                <option value="">Any / Not sure</option>
+                {packages.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
+              </select>
+            </label>
+            <Field label="Travel Date" value={form.travelDate} onChange={onChange('travelDate')} placeholder="MM/YYYY"/>
+            <div/>
           </div>
           <div>
             <div className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Your message</div>
-            <textarea rows={5} placeholder="Tell us about your dream trip…" className="w-full rounded-2xl bg-white/80 border border-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-emerald-500"/>
+            <textarea rows={5} value={form.message} onChange={onChange('message')} placeholder="Tell us about your dream trip…" className="w-full rounded-2xl bg-white/80 border border-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-emerald-500"/>
           </div>
-          <button type="submit" className="btn-primary rounded-full px-6 py-3.5 text-sm font-semibold flex items-center gap-2">
-            {sent ? <>Sent! <CheckCircle2 className="w-4 h-4"/></> : <>Send Enquiry <Send className="w-4 h-4"/></>}
+          {status.state === 'error' && <div className="flex items-center gap-2 text-red-600 text-sm"><AlertCircle className="w-4 h-4"/>{status.message}</div>}
+          {status.state === 'sent' && <div className="flex items-center gap-2 text-emerald-700 text-sm"><CheckCircle2 className="w-4 h-4"/>{status.message}</div>}
+          <button type="submit" disabled={status.state === 'sending'} className="btn-primary rounded-full px-6 py-3.5 text-sm font-semibold flex items-center gap-2 disabled:opacity-70">
+            {status.state === 'sending' ? <>Sending <Loader2 className="w-4 h-4 animate-spin"/></> : status.state === 'sent' ? <>Sent! <CheckCircle2 className="w-4 h-4"/></> : <>Send Enquiry <Send className="w-4 h-4"/></>}
           </button>
         </motion.form>
       </div>
