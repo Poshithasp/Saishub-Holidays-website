@@ -329,6 +329,30 @@ agent_communication:
              h. POST /api/admin/gallery {imageUrl:"https://..."} → 201; then DELETE → 200
              i. GET /api/admin/enquiries → returns total + list
         Do not remove seeded packages/admin — the frontend depends on them.
+    -agent: "main"
+    -message: |
+        FRONTEND FIX (2026-06): React Hydration errors caused by browser extensions (Bitdefender injecting
+        `bis_skin_checked`, `bis_size`, `__processed_*__`; Grammarly `data-gr-*`; ColorZilla `cz-shortcut-listen`, etc.).
+
+        Root cause: extensions stamp DOM attributes AFTER server HTML is parsed but BEFORE React hydrates,
+        causing a mismatch. Previous attempt used a `'use client'` component with useEffect — too late,
+        useEffect runs AFTER hydration has already thrown.
+
+        Fix: Rewrote /app/components/HydrationCleanup.jsx as a Server Component that inlines a synchronous
+        <script> via dangerouslySetInnerHTML into <head>. The script:
+          1) Walks the DOM immediately (before hydration) and strips known extension attrs.
+          2) Installs a MutationObserver to keep stripping them throughout hydration.
+          3) Auto-disconnects the observer 3s after `load` to save CPU.
+
+        Wired into /app/app/layout.js inside <head>.
+
+        Verified with a Playwright simulation that continuously injects `bis_skin_checked`, `bis_size`, and
+        `__processed_ext__` during hydration:
+          - Remaining bad attrs after hydration: 0
+          - Hydration errors: 0, hydration warnings: 0
+          - Total console errors: 0
+          - Page renders normally.
+
     -agent: "testing"
     -message: |
         BACKEND TESTING COMPLETE - 30 tests executed, 29 passed, 1 CRITICAL failure.

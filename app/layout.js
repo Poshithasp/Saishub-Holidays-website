@@ -2,6 +2,7 @@ import './globals.css'
 import { Playfair_Display, Inter, Cormorant_Garamond } from 'next/font/google'
 import ExternalLinkGate from '@/components/ExternalLinkGate'
 import MobileSocialDock from '@/components/MobileSocialDock'
+import HydrationCleanup from '@/components/HydrationCleanup'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' })
 const playfair = Playfair_Display({ subsets: ['latin'], variable: '--font-playfair', display: 'swap' })
@@ -47,6 +48,9 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning className={`${inter.variable} ${playfair.variable} ${cormorant.variable}`}>
+      <head>
+        <HydrationCleanup />
+      </head>
       <body suppressHydrationWarning className="bg-[#eaf3ff] text-slate-900 antialiased overflow-x-hidden">
         {children}
         <ExternalLinkGate />
