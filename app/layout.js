@@ -3,6 +3,7 @@ import { Playfair_Display, Inter, Cormorant_Garamond } from 'next/font/google'
 import ExternalLinkGate from '@/components/ExternalLinkGate'
 import MobileSocialDock from '@/components/MobileSocialDock'
 import HydrationCleanup from '@/components/HydrationCleanup'
+import ForceDesktopViewport from '@/components/ForceDesktopViewport'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' })
 const playfair = Playfair_Display({ subsets: ['latin'], variable: '--font-playfair', display: 'swap' })
@@ -43,12 +44,14 @@ export const viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
+  userScalable: true,
 }
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning className={`${inter.variable} ${playfair.variable} ${cormorant.variable}`}>
       <head>
+        <ForceDesktopViewport />
         <HydrationCleanup />
       </head>
       <body suppressHydrationWarning className="bg-[#eaf3ff] text-slate-900 antialiased overflow-x-hidden">
