@@ -1,184 +1,221 @@
 'use client'
-import { useEffect, useRef } from 'react'
-import dynamic from 'next/dynamic'
-import { motion, useScroll, useTransform } from 'framer-motion'
+import { useEffect, useRef, useState } from 'react'
+import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { ArrowRight, Calendar, MapPin, Users, ChevronDown, Sparkles, Search, ShieldCheck, HeartHandshake, Headphones, Wallet, Compass, Plane, Star, Quote } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { ArrowRight, Calendar, MapPin, Users, ChevronDown, Sparkles, Search, ShieldCheck, HeartHandshake, Headphones, Wallet, Compass, Plane, Star, Quote, Minus, Plus, X } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import FloatingActions from '@/components/FloatingActions'
-import SkyBackdrop from '@/components/SkyBackdrop'
 import AnimatedCounter from '@/components/AnimatedCounter'
-import { externalLinkProps, SOCIAL } from '@/lib/externalLink'
+import api from '@/lib/api'
+import { externalLinkProps, openExternal, SOCIAL } from '@/lib/externalLink'
 
-const EarthScene = dynamic(() => import('@/components/EarthScene'), { ssr: false, loading: () => null })
-
-const DOMESTIC = [
-  { title: 'Kashmir Paradise', region: 'North India', days: '6N / 7D', img: 'https://images.unsplash.com/photo-1682686581264-c47e25e61d95?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODF8MHwxfHNlYXJjaHw0fHxkZXN0aW5hdGlvbnxlbnwwfHx8fDE3ODI4OTcxODB8MA&ixlib=rb-4.1.0&q=85' },
-  { title: 'Kerala Backwaters', region: 'South India', days: '5N / 6D', img: 'https://images.unsplash.com/photo-1523496922380-91d5afba98a3?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODh8MHwxfHNlYXJjaHw0fHxsdXh1cnklMjB0cmF2ZWx8ZW58MHx8fHwxNzgyODk3MTcxfDA&ixlib=rb-4.1.0&q=85' },
-  { title: 'Rajasthan Royals', region: 'West India', days: '7N / 8D', img: 'https://images.unsplash.com/photo-1570814671169-ce8f91015ffe?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1MTN8MHwxfHNlYXJjaHwzfHxsYW5kbWFya3N8ZW58MHx8fHwxNzgyODk3MTcxfDA&ixlib=rb-4.1.0&q=85' },
-  { title: 'Himalayan Escape', region: 'North India', days: '5N / 6D', img: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODF8MHwxfHNlYXJjaHwzfHxkZXN0aW5hdGlvbnxlbnwwfHx8fDE3ODI4OTcxODB8MA&ixlib=rb-4.1.0&q=85' },
-]
-
-const INTERNATIONAL = [
-  { title: 'Swiss Alps Luxe', region: 'Europe', days: '8N / 9D', img: 'https://images.unsplash.com/photo-1551918120-9739cb430c6d?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODh8MHwxfHNlYXJjaHwzfHxsdXh1cnklMjB0cmF2ZWx8ZW58MHx8fHwxNzgyODk3MTcxfDA&ixlib=rb-4.1.0&q=85' },
-  { title: 'Bali Bliss', region: 'Indonesia', days: '6N / 7D', img: 'https://images.unsplash.com/photo-1445019980597-93fa8acb246c?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODh8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjB0cmF2ZWx8ZW58MHx8fHwxNzgyODk3MTcxfDA&ixlib=rb-4.1.0&q=85' },
-  { title: 'Dubai Splendor', region: 'UAE', days: '5N / 6D', img: 'https://images.unsplash.com/photo-1528154291023-a6525fabe5b4?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODh8MHwxfHNlYXJjaHwyfHxsdXh1cnklMjB0cmF2ZWx8ZW58MHx8fHwxNzgyODk3MTcxfDA&ixlib=rb-4.1.0&q=85' },
-  { title: 'Paris Romance', region: 'France', days: '6N / 7D', img: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1MTN8MHwxfHNlYXJjaHwxfHxsYW5kbWFya3N8ZW58MHx8fHwxNzgyODk3MTcxfDA&ixlib=rb-4.1.0&q=85' },
-]
-
-const PILGRIMAGE = [
-  { title: 'Char Dham Yatra', region: 'Uttarakhand', days: '10N / 11D', img: 'https://images.unsplash.com/photo-1573352763925-82bd5dfc31d1?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNDR8MHwxfHNlYXJjaHwzfHx0ZW1wbGV8ZW58MHx8fHwxNzgyODk3MTcxfDA&ixlib=rb-4.1.0&q=85' },
-  { title: 'Tirupati Darshan', region: 'Andhra Pradesh', days: '2N / 3D', img: 'https://images.unsplash.com/photo-1603766806347-54cdf3745953?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNDR8MHwxfHNlYXJjaHwxfHx0ZW1wbGV8ZW58MHx8fHwxNzgyODk3MTcxfDA&ixlib=rb-4.1.0&q=85' },
-  { title: 'Kashi Vishwanath', region: 'Varanasi', days: '3N / 4D', img: 'https://images.unsplash.com/photo-1524443169398-9aa1ceab67d5?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNDR8MHwxfHNlYXJjaHwyfHx0ZW1wbGV8ZW58MHx8fHwxNzgyODk3MTcxfDA&ixlib=rb-4.1.0&q=85' },
-]
-
-const TESTIMONIALS = [
-  { name: 'Anjali & Rohit', trip: 'Swiss Alps Honeymoon', text: 'Absolutely magical. Every detail was handled beautifully — the best decision we made was choosing Saishub Holidays for our honeymoon.' },
-  { name: 'Mr. & Mrs. Rao', trip: 'Char Dham Yatra', text: 'A once-in-a-lifetime spiritual journey. The team took care of us like family every step of the way.' },
-  { name: 'The Menon Family', trip: 'Bali Family Escape', text: 'From kids to grandparents, everyone had a story to tell. Truly seamless, luxurious and heart-touching.' },
-]
-
-function TiltCard({ children, className='' }) {
-  const ref = useRef(null)
-  const onMove = (e) => {
-    const el = ref.current; if (!el) return
-    const r = el.getBoundingClientRect()
-    const x = (e.clientX - r.left) / r.width - 0.5
-    const y = (e.clientY - r.top) / r.height - 0.5
-    el.style.transform = `perspective(900px) rotateX(${-y*8}deg) rotateY(${x*10}deg) translateY(-4px)`
-  }
-  const onLeave = () => { if (ref.current) ref.current.style.transform = '' }
+/* ---------------- Popular Package Card ---------------- */
+function PackageCard({ pkg, i }) {
+  const img = (Array.isArray(pkg.gallery) && pkg.gallery[0]) || 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?crop=entropy&cs=srgb&fm=jpg&q=85'
+  const highlights = Array.isArray(pkg.highlights) ? pkg.highlights.slice(0, 2) : []
+  const bookMsg = `Hi Saishubh Holidays, I would like to book the ${pkg.name} (${pkg.duration}) package. Please share more details.`
   return (
-    <div ref={ref} onMouseMove={onMove} onMouseLeave={onLeave} className={`transition-transform duration-300 will-change-transform ${className}`}>
-      {children}
+    <motion.div initial={{opacity:0,y:30}} whileInView={{opacity:1,y:0}} viewport={{once:true, margin:'-8% 0px'}} transition={{delay:(i%4)*0.08}} className="tilt-card group relative rounded-3xl overflow-hidden bg-white shadow-xl ring-1 ring-white/60">
+      <div className="relative h-56 overflow-hidden">
+        <img src={img} alt={pkg.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1200ms]"/>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent"/>
+        <div className="absolute top-3 left-3 bg-white/90 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-800">{pkg.category}</div>
+        <div className="absolute top-3 right-3 glass rounded-full px-3 py-1 text-[10px] font-semibold text-emerald-900 flex items-center gap-1"><Calendar className="w-3 h-3"/>{pkg.duration}</div>
+      </div>
+      <div className="p-5">
+        <div className="font-display text-lg md:text-xl font-semibold text-emerald-900 line-clamp-1">{pkg.name}</div>
+        <div className="mt-1 text-xs text-slate-500 flex items-center gap-1"><MapPin className="w-3 h-3"/>{pkg.startingLocation}</div>
+        {highlights.length > 0 && (
+          <ul className="mt-3 space-y-1">
+            {highlights.map((h, k) => <li key={k} className="text-xs text-slate-600 flex items-start gap-1.5"><span className="w-1 h-1 mt-1.5 rounded-full bg-amber-500 shrink-0"/><span className="line-clamp-1">{h}</span></li>)}
+          </ul>
+        )}
+        <div className="mt-4 flex items-center gap-2">
+          <Link href={`/packages/${pkg.id}`} className="flex-1 rounded-full text-center bg-white ring-1 ring-emerald-700/20 text-emerald-800 hover:bg-emerald-50 text-xs font-semibold px-3 py-2">View Details</Link>
+          <a {...externalLinkProps(SOCIAL.whatsapp(bookMsg))} className="flex-1 btn-primary rounded-full text-xs font-semibold px-3 py-2 text-center">Book Now</a>
+        </div>
+      </div>
+    </motion.div>
+  )
+}
+
+/* ---------------- Destination chip ---------------- */
+function DestinationChip({ name, img, active, onClick }) {
+  return (
+    <button onClick={onClick} className={`shrink-0 relative w-40 md:w-48 h-56 md:h-64 rounded-3xl overflow-hidden ring-1 transition ${active ? 'ring-emerald-500 scale-[1.03]' : 'ring-white/60 hover:ring-amber-400'}`}>
+      <img src={img} alt={name} loading="lazy" className="absolute inset-0 w-full h-full object-cover"/>
+      <div className="absolute inset-0 bg-gradient-to-t from-emerald-950/80 via-emerald-900/30 to-transparent"/>
+      <div className="absolute bottom-3 inset-x-3 text-white font-display text-lg text-left">{name}</div>
+      {active && <div className="absolute top-3 right-3 bg-amber-400 text-emerald-950 rounded-full text-[10px] font-bold px-2 py-0.5">FILTERED</div>}
+    </button>
+  )
+}
+
+const DESTINATIONS = [
+  { name: 'Mysore', match: ['mysore'], img: 'https://images.unsplash.com/photo-1570814671169-ce8f91015ffe?crop=entropy&cs=srgb&fm=jpg&q=85' },
+  { name: 'Ooty', match: ['ooty','coonoor'], img: 'https://images.pexels.com/photos/7079773/pexels-photo-7079773.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940' },
+  { name: 'Kerala', match: ['munnar','alleppey','cochin'], img: 'https://images.unsplash.com/photo-1523496922380-91d5afba98a3?crop=entropy&cs=srgb&fm=jpg&q=85' },
+  { name: 'Hyderabad', match: ['hyderabad','ramoji'], img: 'https://images.unsplash.com/photo-1570814671169-ce8f91015ffe?crop=entropy&cs=srgb&fm=jpg&q=85' },
+  { name: 'Delhi • Agra • Jaipur', match: ['delhi','agra','jaipur'], img: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?crop=entropy&cs=srgb&fm=jpg&q=85' },
+  { name: 'Tirupati', match: ['tirupati','srikalahasti'], img: 'https://images.unsplash.com/photo-1603766806347-54cdf3745953?crop=entropy&cs=srgb&fm=jpg&q=85' },
+  { name: 'Rameshwaram', match: ['rameshwaram','madurai'], img: 'https://images.pexels.com/photos/37936887/pexels-photo-37936887.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940' },
+  { name: 'Kanyakumari', match: ['kanyakumari'], img: 'https://images.pexels.com/photos/12752175/pexels-photo-12752175.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940' },
+  { name: 'Shirdi • Nashik', match: ['shirdi','nashik','shani'], img: 'https://images.unsplash.com/photo-1524443169398-9aa1ceab67d5?crop=entropy&cs=srgb&fm=jpg&q=85' },
+  { name: 'Varanasi • Ayodhya', match: ['varanasi','gaya','prayagraj','ayodhya'], img: 'https://images.unsplash.com/photo-1573352763925-82bd5dfc31d1?crop=entropy&cs=srgb&fm=jpg&q=85' },
+]
+
+/* ---------------- Traveller counter ---------------- */
+function Stepper({ label, value, onChange, min = 0 }) {
+  return (
+    <div className="flex items-center justify-between gap-3 py-2">
+      <div className="text-sm text-slate-700">{label}</div>
+      <div className="flex items-center gap-2">
+        <button onClick={() => onChange(Math.max(min, value - 1))} className="w-8 h-8 rounded-full bg-white ring-1 ring-slate-200 flex items-center justify-center hover:bg-slate-50"><Minus className="w-3.5 h-3.5"/></button>
+        <div className="w-8 text-center font-semibold text-emerald-900">{value}</div>
+        <button onClick={() => onChange(value + 1)} className="w-8 h-8 rounded-full bg-white ring-1 ring-slate-200 flex items-center justify-center hover:bg-slate-50"><Plus className="w-3.5 h-3.5"/></button>
+      </div>
     </div>
   )
 }
 
-function DestinationCard({ item, gold=false }) {
-  return (
-    <TiltCard>
-      <div className="relative rounded-3xl overflow-hidden group h-[380px] shadow-xl ring-1 ring-white/50 bg-white">
-        <img src={item.img} alt={item.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1200ms]"/>
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"/>
-        <div className="absolute top-4 left-4 glass rounded-full px-3 py-1 text-[11px] font-semibold text-emerald-900 flex items-center gap-1"><MapPin className="w-3 h-3"/>{item.region}</div>
-        {gold && <div className="absolute top-4 right-4 bg-gradient-to-r from-amber-400 to-amber-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-lg">Premium</div>}
-        <div className="absolute inset-x-0 bottom-0 p-5 text-white">
-          <div className="font-display text-2xl font-semibold">{item.title}</div>
-          <div className="flex items-center justify-between mt-2">
-            <div className="text-xs opacity-80 flex items-center gap-1"><Calendar className="w-3.5 h-3.5"/>{item.days}</div>
-            <button className="rounded-full bg-white/90 text-emerald-900 text-xs font-semibold px-3 py-1.5 flex items-center gap-1 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition">Enquire <ArrowRight className="w-3 h-3"/></button>
-          </div>
-        </div>
-      </div>
-    </TiltCard>
-  )
-}
-
 export default function Home() {
-  const mouseRef = useRef({ x: 0, y: 0 })
-  const scrollProgressRef = useRef(0)
-  const heroRef = useRef(null)
-  const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] })
-  const heroScale = useTransform(scrollYProgress, [0, 1], [1, 1.35])
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0])
+  const router = useRouter()
+  const [packages, setPackages] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [activeDest, setActiveDest] = useState(null)
+
+  const [dest, setDest] = useState('')
+  const [cat, setCat] = useState('')
+  const [date, setDate] = useState('')
+  const [adults, setAdults] = useState(2)
+  const [children, setChildren] = useState(0)
+  const [showTravellers, setShowTravellers] = useState(false)
 
   useEffect(() => {
-    const unsub = scrollYProgress.on('change', (v) => { scrollProgressRef.current = v })
-    return () => unsub()
-  }, [scrollYProgress])
-
-  useEffect(() => {
-    const onMove = (e) => {
-      mouseRef.current.x = (e.clientX / window.innerWidth) * 2 - 1
-      mouseRef.current.y = -((e.clientY / window.innerHeight) * 2 - 1)
-    }
-    window.addEventListener('mousemove', onMove)
-    return () => window.removeEventListener('mousemove', onMove)
+    api.getPackages().then(d => { setPackages(d.packages || []); setLoading(false) }).catch(() => { setPackages([]); setLoading(false) })
   }, [])
+
+  const search = (e) => {
+    e && e.preventDefault && e.preventDefault()
+    const params = new URLSearchParams()
+    if (dest) params.set('destination', dest)
+    if (cat) params.set('category', cat)
+    if (date) params.set('date', date)
+    params.set('adults', adults)
+    params.set('children', children)
+    router.push(`/search?${params.toString()}`)
+  }
+
+  // Unique destinations from packages for the search dropdown
+  const allDestOptions = Array.from(new Set(DESTINATIONS.map(d => d.name)))
+
+  // Filter packages by active destination chip
+  const filteredPackages = activeDest
+    ? packages.filter(p => {
+        const dm = DESTINATIONS.find(d => d.name === activeDest)
+        if (!dm) return false
+        const hay = (p.name + ' ' + p.startingLocation).toLowerCase()
+        return dm.match.some(kw => hay.includes(kw))
+      })
+    : packages
+
+  const showPackages = filteredPackages.slice(0, 12)
 
   return (
     <div className="relative">
       <Navbar/>
       <FloatingActions/>
 
-      {/* HERO */}
-      <section ref={heroRef} className="relative min-h-[100vh] overflow-hidden pt-28 md:pt-32">
-        <SkyBackdrop/>
+      {/* HERO with uploaded MP4 background */}
+      <section className="relative min-h-[100vh] overflow-hidden pt-28 md:pt-32">
+        {/* Video background — uploaded MP4, unmodified */}
+        <video
+          className="absolute inset-0 w-full h-full object-cover z-0"
+          src="/hero.mp4"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          disablePictureInPicture
+          aria-hidden="true"
+        />
+        {/* Soft gradient so overlay text stays legible without hiding the video */}
+        <div className="absolute inset-0 z-[1] bg-gradient-to-b from-black/25 via-black/10 to-black/40 pointer-events-none"/>
 
-        {/* 3D Earth centerpiece */}
-        <motion.div style={{ scale: heroScale, opacity: heroOpacity }} className="absolute inset-0 z-10">
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-[95vw] md:w-[70vw] lg:w-[55vw] h-[60vh] md:h-[85vh] translate-x-0 md:translate-x-[10%] translate-y-4">
-              <EarthScene mouseRef={mouseRef} scrollRef={scrollProgressRef}/>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Hero copy overlay */}
         <div className="relative z-20 max-w-[1400px] mx-auto px-6 md:px-10 pt-6 md:pt-10">
-          <div className="grid lg:grid-cols-2 gap-8 items-center min-h-[70vh]">
-            <motion.div initial={{opacity:0,y:30}} animate={{opacity:1,y:0}} transition={{duration:0.8}}>
-              <div className="flex items-center gap-3 text-amber-700 text-xs md:text-sm font-semibold tracking-[0.35em] uppercase">
-                <span className="w-6 h-px bg-amber-500"/> Explore · Dream · Discover
-              </div>
-              <h1 className="mt-6 font-display font-bold leading-[1.02] text-5xl md:text-7xl lg:text-8xl hero-gradient-text">
-                Journeys That
-              </h1>
-              <h1 className="font-serif-alt italic font-semibold text-5xl md:text-7xl lg:text-8xl gold-script leading-[1.02] mt-1">
-                Stay Forever
-              </h1>
-              <div className="mt-6 flex items-center gap-3 text-emerald-900">
-                <div className="h-px w-16 bg-amber-500"/>
-                <Plane className="w-5 h-5 text-amber-600"/>
-                <div className="h-px w-16 bg-amber-500"/>
-              </div>
-              <p className="mt-6 max-w-lg text-slate-700 text-lg leading-relaxed">
-                From sacred pilgrimages to stunning getaways, we create unforgettable experiences crafted just for you.
-              </p>
-              <div className="mt-8 flex flex-wrap gap-4">
-                <Link href="/domestic" className="btn-primary rounded-full px-7 py-4 text-sm font-semibold flex items-center gap-2">Explore Packages <ArrowRight className="w-4 h-4"/></Link>
-                <Link href="/contact" className="btn-outline rounded-full px-7 py-4 text-sm font-semibold flex items-center gap-2">Plan Your Trip <Calendar className="w-4 h-4"/></Link>
-              </div>
-            </motion.div>
-            <div className="hidden lg:block"/>
-          </div>
-
-          {/* Search bar */}
-          <motion.div initial={{opacity:0,y:40}} animate={{opacity:1,y:0}} transition={{delay:0.3, duration:0.7}} className="relative mt-8 md:mt-14 glass rounded-2xl p-3 md:p-4 grid grid-cols-2 md:grid-cols-5 gap-3">
-            <div className="flex items-center gap-3 px-3 py-2">
-              <div className="w-9 h-9 rounded-full bg-emerald-50 flex items-center justify-center"><MapPin className="w-4 h-4 text-emerald-800"/></div>
-              <div className="text-left">
-                <div className="text-[10px] uppercase tracking-widest text-slate-500">Where to?</div>
-                <div className="text-sm font-semibold text-slate-800">Any Destination</div>
-              </div>
+          <motion.div initial={{opacity:0,y:30}} animate={{opacity:1,y:0}} transition={{duration:0.8}} className="max-w-3xl text-white drop-shadow-lg">
+            <div className="flex items-center gap-3 text-amber-300 text-xs md:text-sm font-semibold tracking-[0.35em] uppercase">
+              <span className="w-6 h-px bg-amber-400"/> Explore · Dream · Discover
             </div>
-            <div className="flex items-center gap-3 px-3 py-2 md:border-l border-slate-200">
-              <div className="w-9 h-9 rounded-full bg-emerald-50 flex items-center justify-center"><Compass className="w-4 h-4 text-emerald-800"/></div>
-              <div className="text-left">
-                <div className="text-[10px] uppercase tracking-widest text-slate-500">Tour Type</div>
-                <div className="text-sm font-semibold text-slate-800">All Types <ChevronDown className="inline w-3.5 h-3.5"/></div>
-              </div>
+            <h1 className="mt-6 font-display font-bold leading-[1.02] text-5xl md:text-7xl lg:text-8xl text-white">Journeys That</h1>
+            <h1 className="font-serif-alt italic font-semibold text-5xl md:text-7xl lg:text-8xl gold-script leading-[1.02] mt-1">Stay Forever</h1>
+            <div className="mt-6 flex items-center gap-3">
+              <div className="h-px w-16 bg-amber-400"/>
+              <Plane className="w-5 h-5 text-amber-300"/>
+              <div className="h-px w-16 bg-amber-400"/>
             </div>
-            <div className="flex items-center gap-3 px-3 py-2 md:border-l border-slate-200">
-              <div className="w-9 h-9 rounded-full bg-emerald-50 flex items-center justify-center"><Calendar className="w-4 h-4 text-emerald-800"/></div>
-              <div className="text-left">
-                <div className="text-[10px] uppercase tracking-widest text-slate-500">Travel Date</div>
-                <div className="text-sm font-semibold text-slate-800">Select Date</div>
-              </div>
+            <p className="mt-6 max-w-lg text-white/95 text-lg leading-relaxed">From sacred pilgrimages to stunning getaways, we create unforgettable experiences crafted just for you.</p>
+            <div className="mt-8 flex flex-wrap gap-4">
+              <a href="#packages" className="btn-primary rounded-full px-7 py-4 text-sm font-semibold flex items-center gap-2">Explore Packages <ArrowRight className="w-4 h-4"/></a>
+              <a {...externalLinkProps(SOCIAL.whatsapp('Hi Saishubh Holidays, I would like to plan a trip.'))} className="rounded-full px-7 py-4 text-sm font-semibold bg-white/95 text-emerald-900 flex items-center gap-2">WhatsApp Us</a>
             </div>
-            <div className="flex items-center gap-3 px-3 py-2 md:border-l border-slate-200">
-              <div className="w-9 h-9 rounded-full bg-emerald-50 flex items-center justify-center"><Users className="w-4 h-4 text-emerald-800"/></div>
-              <div className="text-left">
-                <div className="text-[10px] uppercase tracking-widest text-slate-500">Travellers</div>
-                <div className="text-sm font-semibold text-slate-800">2 Adults · 0 Children</div>
-              </div>
-            </div>
-            <Link href="/contact" className="btn-primary rounded-xl md:rounded-full px-5 py-3 text-sm font-semibold flex items-center justify-center gap-2 col-span-2 md:col-span-1">Search Packages <Search className="w-4 h-4"/></Link>
           </motion.div>
 
-          {/* Features strip */}
+          {/* Functional Search Bar */}
+          <motion.form onSubmit={search} initial={{opacity:0,y:40}} animate={{opacity:1,y:0}} transition={{delay:0.3, duration:0.7}} className="relative mt-8 md:mt-14 glass rounded-2xl p-3 md:p-4 grid grid-cols-2 md:grid-cols-5 gap-3">
+            <label className="flex items-center gap-3 px-3 py-2 min-w-0">
+              <div className="w-9 h-9 rounded-full bg-emerald-50 flex items-center justify-center shrink-0"><MapPin className="w-4 h-4 text-emerald-800"/></div>
+              <div className="text-left flex-1 min-w-0">
+                <div className="text-[10px] uppercase tracking-widest text-slate-500">Where to?</div>
+                <select value={dest} onChange={e => setDest(e.target.value)} className="w-full text-sm font-semibold text-slate-800 bg-transparent outline-none cursor-pointer">
+                  <option value="">Any Destination</option>
+                  {allDestOptions.map(d => <option key={d} value={d}>{d}</option>)}
+                </select>
+              </div>
+            </label>
+            <label className="flex items-center gap-3 px-3 py-2 md:border-l border-slate-200 min-w-0">
+              <div className="w-9 h-9 rounded-full bg-emerald-50 flex items-center justify-center shrink-0"><Compass className="w-4 h-4 text-emerald-800"/></div>
+              <div className="text-left flex-1 min-w-0">
+                <div className="text-[10px] uppercase tracking-widest text-slate-500">Tour Type</div>
+                <select value={cat} onChange={e => setCat(e.target.value)} className="w-full text-sm font-semibold text-slate-800 bg-transparent outline-none cursor-pointer">
+                  <option value="">All Types</option>
+                  <option>Domestic</option>
+                  <option>International</option>
+                  <option>Pilgrimage</option>
+                </select>
+              </div>
+            </label>
+            <label className="flex items-center gap-3 px-3 py-2 md:border-l border-slate-200 min-w-0">
+              <div className="w-9 h-9 rounded-full bg-emerald-50 flex items-center justify-center shrink-0"><Calendar className="w-4 h-4 text-emerald-800"/></div>
+              <div className="text-left flex-1 min-w-0">
+                <div className="text-[10px] uppercase tracking-widest text-slate-500">Travel Date</div>
+                <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full text-sm font-semibold text-slate-800 bg-transparent outline-none"/>
+              </div>
+            </label>
+            <div className="relative flex items-center gap-3 px-3 py-2 md:border-l border-slate-200 min-w-0">
+              <button type="button" onClick={() => setShowTravellers(v => !v)} className="flex items-center gap-3 w-full">
+                <div className="w-9 h-9 rounded-full bg-emerald-50 flex items-center justify-center shrink-0"><Users className="w-4 h-4 text-emerald-800"/></div>
+                <div className="text-left flex-1 min-w-0">
+                  <div className="text-[10px] uppercase tracking-widest text-slate-500">Travellers</div>
+                  <div className="text-sm font-semibold text-slate-800 truncate">{adults} Adult{adults!==1?'s':''} · {children} Child{children!==1?'ren':''}</div>
+                </div>
+                <ChevronDown className="w-4 h-4 text-slate-400"/>
+              </button>
+              {showTravellers && (
+                <div className="absolute z-20 top-full mt-2 left-0 right-0 md:min-w-[280px] bg-white rounded-2xl shadow-2xl p-4 ring-1 ring-slate-100">
+                  <Stepper label="Adults" value={adults} min={1} onChange={setAdults}/>
+                  <Stepper label="Children" value={children} min={0} onChange={setChildren}/>
+                  <button type="button" onClick={() => setShowTravellers(false)} className="mt-2 w-full btn-primary rounded-full py-2 text-xs font-semibold">Done</button>
+                </div>
+              )}
+            </div>
+            <button type="submit" className="btn-primary rounded-xl md:rounded-full px-5 py-3 text-sm font-semibold flex items-center justify-center gap-2 col-span-2 md:col-span-1">Search Packages <Search className="w-4 h-4"/></button>
+          </motion.form>
+
+          {/* Feature strip */}
           <motion.div initial={{opacity:0,y:40}} animate={{opacity:1,y:0}} transition={{delay:0.4}} className="mt-4 glass rounded-2xl px-4 md:px-6 py-4 grid grid-cols-2 md:grid-cols-5 gap-4">
             {[
               { icon: Wallet, t: 'Best Price Guarantee', s: 'Affordable & Transparent' },
@@ -198,7 +235,7 @@ export default function Home() {
           </motion.div>
 
           {/* Counters */}
-          <motion.div initial={{opacity:0,y:40}} whileInView={{opacity:1,y:0}} viewport={{ once: true }} transition={{delay:0.1}} className="mt-4 mb-16 glass rounded-2xl px-4 md:px-6 py-6 grid grid-cols-2 md:grid-cols-5 gap-4">
+          <motion.div initial={{opacity:0,y:40}} animate={{opacity:1,y:0}} transition={{delay:0.5}} className="mt-4 mb-16 glass rounded-2xl px-4 md:px-6 py-6 grid grid-cols-2 md:grid-cols-5 gap-4">
             {[
               { icon: Users, n: 2500, s: '+', l: 'Happy Customers' },
               { icon: Plane, n: 500, s: '+', l: 'Tours Completed' },
@@ -216,79 +253,52 @@ export default function Home() {
             ))}
           </motion.div>
         </div>
-
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 text-emerald-900/70 flex flex-col items-center animate-bounce">
-          <div className="text-[10px] tracking-widest uppercase">Scroll</div>
-          <ChevronDown className="w-5 h-5"/>
-        </div>
       </section>
 
-      {/* WHY CHOOSE US */}
-      <section className="relative py-20">
-        <div className="max-w-[1400px] mx-auto px-6 md:px-10 grid lg:grid-cols-2 gap-14 items-center">
-          <motion.div initial={{opacity:0,x:-30}} whileInView={{opacity:1,x:0}} viewport={{once:true}}>
-            <div className="tracking-[0.35em] text-xs text-amber-700 font-semibold uppercase">Why Saishub</div>
-            <h2 className="mt-3 font-display text-4xl md:text-6xl font-bold hero-gradient-text">Luxury woven <br/><span className="gold-script font-serif-alt italic">into every detail.</span></h2>
-            <p className="mt-5 text-slate-700 text-lg max-w-xl">We design cinematic journeys — sacred yatras, family holidays and international escapes — all with the same obsession for detail, care and comfort. From your first call to your last sunset, we are with you.</p>
-            <div className="mt-8 grid sm:grid-cols-2 gap-4">
-              {[
-                {t:'Handpicked stays', s:'Only the finest hotels and resorts'},
-                {t:'Personal concierge', s:'A dedicated planner for your trip'},
-                {t:'Seamless travel', s:'End-to-end logistics handled'},
-                {t:'Local experts', s:'Insider access & cultural depth'},
-              ].map((x,i)=>(
-                <div key={i} className="glass rounded-2xl p-4">
-                  <div className="font-semibold text-emerald-900">{x.t}</div>
-                  <div className="text-sm text-slate-600 mt-1">{x.s}</div>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-          <motion.div initial={{opacity:0,x:30}} whileInView={{opacity:1,x:0}} viewport={{once:true}} className="relative">
-            <div className="grid grid-cols-2 gap-4">
-              <img src="https://images.unsplash.com/photo-1642341185205-8e538ad2994c?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1MTN8MHwxfHNlYXJjaHw0fHxsYW5kbWFya3N8ZW58MHx8fHwxNzgyODk3MTcxfDA&ixlib=rb-4.1.0&q=85" className="h-56 md:h-72 w-full object-cover rounded-3xl shadow-xl"/>
-              <img src="https://images.unsplash.com/photo-1576542260349-626bf55262a8?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1MTN8MHwxfHNlYXJjaHwyfHxsYW5kbWFya3N8ZW58MHx8fHwxNzgyODk3MTcxfDA&ixlib=rb-4.1.0&q=85" className="h-56 md:h-72 w-full object-cover rounded-3xl shadow-xl mt-10"/>
-              <img src="https://images.pexels.com/photos/7079773/pexels-photo-7079773.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940" className="h-56 md:h-72 w-full object-cover rounded-3xl shadow-xl"/>
-              <img src="https://images.pexels.com/photos/37936887/pexels-photo-37936887.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940" className="h-56 md:h-72 w-full object-cover rounded-3xl shadow-xl mt-10"/>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* DOMESTIC */}
-      <SectionGrid eyebrow="Incredible India" title={<>Domestic <span className="gold-script font-serif-alt italic">Escapes</span></>} items={DOMESTIC} link="/domestic"/>
-
-      {/* INTERNATIONAL */}
-      <SectionGrid eyebrow="Beyond Borders" title={<>International <span className="gold-script font-serif-alt italic">Getaways</span></>} items={INTERNATIONAL} gold link="/international"/>
-
-      {/* PILGRIMAGE */}
-      <SectionGrid eyebrow="Sacred Journeys" title={<>Pilgrimage <span className="gold-script font-serif-alt italic">Yatras</span></>} items={PILGRIMAGE} link="/pilgrimage"/>
-
-      {/* TESTIMONIALS */}
-      <section className="relative py-20">
+      {/* DESTINATIONS */}
+      <section className="relative py-16 sky-bg">
         <div className="max-w-[1400px] mx-auto px-6 md:px-10">
-          <div className="flex items-end justify-between flex-wrap gap-4">
+          <div className="flex items-end justify-between flex-wrap gap-4 mb-6">
             <div>
-              <div className="tracking-[0.35em] text-xs text-amber-700 font-semibold uppercase">Kind Words</div>
-              <h2 className="mt-3 font-display text-4xl md:text-6xl font-bold hero-gradient-text">Loved by <span className="gold-script font-serif-alt italic">travelers</span></h2>
+              <div className="tracking-[0.35em] text-xs text-amber-700 font-semibold uppercase">Discover</div>
+              <h2 className="mt-3 font-display text-4xl md:text-5xl font-bold hero-gradient-text">Iconic <span className="gold-script font-serif-alt italic">Destinations</span></h2>
+              <p className="mt-2 text-slate-600">Tap a destination to see matching packages.</p>
             </div>
-            <Link href="/testimonials" className="btn-outline rounded-full px-5 py-3 text-sm font-semibold flex items-center gap-2">Read all <ArrowRight className="w-4 h-4"/></Link>
+            {activeDest && (
+              <button onClick={() => setActiveDest(null)} className="btn-outline rounded-full px-4 py-2 text-xs font-semibold flex items-center gap-2"><X className="w-3.5 h-3.5"/> Clear filter</button>
+            )}
           </div>
-          <div className="mt-10 grid md:grid-cols-3 gap-6">
-            {TESTIMONIALS.map((t,i)=>(
-              <motion.div key={i} initial={{opacity:0,y:30}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{delay:i*0.1}} className="glass rounded-3xl p-6 relative">
-                <Quote className="w-8 h-8 text-amber-500"/>
-                <p className="mt-3 text-slate-700 leading-relaxed">“{t.text}”</p>
-                <div className="mt-5 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-800 text-white flex items-center justify-center font-semibold">{t.name.split(' ').map(n=>n[0]).slice(0,2).join('')}</div>
-                  <div>
-                    <div className="font-semibold text-emerald-900">{t.name}</div>
-                    <div className="text-xs text-slate-500">{t.trip}</div>
-                  </div>
-                  <div className="ml-auto flex text-amber-500">{Array.from({length:5}).map((_,k)=><Star key={k} className="w-3.5 h-3.5 fill-current"/>)}</div>
-                </div>
-              </motion.div>
+          <div className="flex gap-4 overflow-x-auto no-scrollbar pb-4 -mx-6 px-6">
+            {DESTINATIONS.map(d => (
+              <DestinationChip key={d.name} name={d.name} img={d.img} active={activeDest === d.name} onClick={() => setActiveDest(activeDest === d.name ? null : d.name)}/>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* POPULAR PACKAGES */}
+      <section id="packages" className="relative py-16 sky-bg">
+        <div className="max-w-[1400px] mx-auto px-6 md:px-10">
+          <div className="flex items-end justify-between flex-wrap gap-4 mb-8">
+            <div>
+              <div className="tracking-[0.35em] text-xs text-amber-700 font-semibold uppercase">Handpicked</div>
+              <h2 className="mt-3 font-display text-4xl md:text-6xl font-bold hero-gradient-text">Popular <span className="gold-script font-serif-alt italic">Packages</span></h2>
+              {activeDest && <div className="mt-2 text-sm text-emerald-700">Showing packages for <b>{activeDest}</b> · <button onClick={() => setActiveDest(null)} className="underline">show all</button></div>}
+            </div>
+            <div className="flex gap-2">
+              <Link href="/domestic" className="btn-outline rounded-full px-4 py-2 text-xs font-semibold">Domestic</Link>
+              <Link href="/pilgrimage" className="btn-outline rounded-full px-4 py-2 text-xs font-semibold">Pilgrimage</Link>
+              <Link href="/international" className="btn-outline rounded-full px-4 py-2 text-xs font-semibold">International</Link>
+            </div>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {loading && Array.from({length:8}).map((_,i) => <div key={i} className="h-96 rounded-3xl bg-white/60 animate-pulse"/>)}
+            {!loading && showPackages.map((p, i) => <PackageCard key={p.id} pkg={p} i={i}/>) }
+            {!loading && showPackages.length === 0 && (
+              <div className="col-span-full glass rounded-3xl p-8 text-center text-slate-600">
+                No packages match this destination. <button onClick={() => setActiveDest(null)} className="text-emerald-700 font-semibold underline">Show all</button>
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -297,12 +307,12 @@ export default function Home() {
       <section className="relative py-20">
         <div className="max-w-[1400px] mx-auto px-6 md:px-10">
           <motion.div initial={{opacity:0,y:30}} whileInView={{opacity:1,y:0}} viewport={{once:true}} className="relative rounded-3xl overflow-hidden ring-1 ring-white/40 shadow-2xl">
-            <img src="https://images.unsplash.com/photo-1445019980597-93fa8acb246c?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODh8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjB0cmF2ZWx8ZW58MHx8fHwxNzgyODk3MTcxfDA&ixlib=rb-4.1.0&q=85" className="absolute inset-0 w-full h-full object-cover"/>
+            <img src="https://images.unsplash.com/photo-1445019980597-93fa8acb246c?crop=entropy&cs=srgb&fm=jpg&q=85" loading="lazy" className="absolute inset-0 w-full h-full object-cover"/>
             <div className="absolute inset-0 bg-gradient-to-r from-emerald-950/80 via-emerald-900/60 to-transparent"/>
             <div className="relative p-10 md:p-16 max-w-2xl text-white">
               <div className="tracking-[0.35em] text-xs text-amber-300 font-semibold uppercase">Your Journey Awaits</div>
               <h3 className="mt-3 font-display text-4xl md:text-6xl font-bold leading-tight">Let’s craft your <span className="gold-script font-serif-alt italic">next story.</span></h3>
-              <p className="mt-5 text-emerald-50/90 max-w-lg">Tell us where you dream, and we will design the itinerary, book the stays, arrange the flights and be with you every mile of the way.</p>
+              <p className="mt-5 text-emerald-50/90 max-w-lg">Tell us where you dream, and we will design the itinerary, book the stays and be with you every mile of the way.</p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link href="/contact" className="btn-primary rounded-full px-6 py-3.5 text-sm font-semibold flex items-center gap-2">Book Now <ArrowRight className="w-4 h-4"/></Link>
                 <a {...externalLinkProps(SOCIAL.whatsapp('Hi Saishubh Holidays, I would like to plan a trip.'))} className="rounded-full px-6 py-3.5 text-sm font-semibold bg-white text-emerald-900 flex items-center gap-2">WhatsApp Us</a>
@@ -314,28 +324,5 @@ export default function Home() {
 
       <Footer/>
     </div>
-  )
-}
-
-function SectionGrid({ eyebrow, title, items, gold=false, link }) {
-  return (
-    <section className="relative py-20">
-      <div className="max-w-[1400px] mx-auto px-6 md:px-10">
-        <div className="flex items-end justify-between flex-wrap gap-4">
-          <div>
-            <div className="tracking-[0.35em] text-xs text-amber-700 font-semibold uppercase">{eyebrow}</div>
-            <h2 className="mt-3 font-display text-4xl md:text-6xl font-bold hero-gradient-text">{title}</h2>
-          </div>
-          <Link href={link} className="btn-outline rounded-full px-5 py-3 text-sm font-semibold flex items-center gap-2">View all <ArrowRight className="w-4 h-4"/></Link>
-        </div>
-        <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {items.map((it, i) => (
-            <motion.div key={i} initial={{opacity:0,y:30}} whileInView={{opacity:1,y:0}} viewport={{once:true, margin:'-10% 0px'}} transition={{delay:i*0.08}}>
-              <DestinationCard item={it} gold={gold}/>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-    </section>
   )
 }
