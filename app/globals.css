@@ -32,15 +32,8 @@ html, body { scroll-behavior: smooth; }
 }
 
 .sky-bg {
-  background:
-    /* Soft top glow kept for warmth */
-    radial-gradient(1200px 700px at 80% 10%, rgba(255, 236, 190, 0.35), transparent 60%),
-    /* Light wash so overlaid cards and text stay perfectly readable on top of the image */
-    linear-gradient(180deg, rgba(234, 243, 255, 0.62), rgba(216, 236, 255, 0.68) 50%, rgba(201, 224, 247, 0.78)),
-    /* SAISHUBH HOLIDAYS scenic photograph — airplane over clouds with temple and waterfall */
-    url('/images/scenic-bg.png') center/cover no-repeat,
-    /* Solid fallback if the image fails to load */
-    linear-gradient(180deg, #eaf3ff 0%, #d8ecff 40%, #c9e0f7 100%);
+  /* SAISHUBH HOLIDAYS scenic photograph — shown exactly as uploaded, no overlays, no filters */
+  background: url('/images/scenic-bg.png') center/cover no-repeat;
 }
 
 .gold-underline {
