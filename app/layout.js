@@ -46,8 +46,8 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${inter.variable} ${playfair.variable} ${cormorant.variable}`}>
-      <body className="bg-[#eaf3ff] text-slate-900 antialiased overflow-x-hidden">
+    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${playfair.variable} ${cormorant.variable}`}>
+      <body suppressHydrationWarning className="bg-[#eaf3ff] text-slate-900 antialiased overflow-x-hidden">
         {children}
         <ExternalLinkGate />
         <MobileSocialDock />
