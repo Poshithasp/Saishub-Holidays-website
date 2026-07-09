@@ -47,7 +47,7 @@ export default function Footer() {
       </div>
       <div className="border-t border-white/10">
         <div className="max-w-[1400px] mx-auto px-6 md:px-10 py-6 flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-emerald-100/60">
-          <div>© {new Date().getFullYear()} Saishub Holidays. All rights reserved.</div>
+          <div suppressHydrationWarning>© {new Date().getFullYear()} Saishub Holidays. All rights reserved.</div>
           <div>Crafted with care · Explore the World with Confidence</div>
         </div>
       </div>
