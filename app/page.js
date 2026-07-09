@@ -129,7 +129,10 @@ export default function Home() {
       <FloatingActions/>
 
       {/* HERO with uploaded MP4 background */}
-      <section className="relative min-h-[100vh] overflow-hidden pt-28 md:pt-32">
+      {/* Use a viewport-independent height so the hero has the SAME aspect ratio on desktop and
+          on mobile (where the forced-desktop viewport would otherwise inflate 100vh, making the
+          16:9 video appear extremely zoomed in on the earth). */}
+      <section className="relative min-h-[820px] overflow-hidden pt-28 md:pt-32">
         {/* Video background — uploaded MP4, unmodified */}
         <video
           className="absolute inset-0 w-full h-full object-cover z-0"
