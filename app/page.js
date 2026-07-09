@@ -72,9 +72,9 @@ function Stepper({ label, value, onChange, min = 0 }) {
     <div className="flex items-center justify-between gap-3 py-2">
       <div className="text-sm text-slate-700">{label}</div>
       <div className="flex items-center gap-2">
-        <button onClick={() => onChange(Math.max(min, value - 1))} className="w-8 h-8 rounded-full bg-white ring-1 ring-slate-200 flex items-center justify-center hover:bg-slate-50"><Minus className="w-3.5 h-3.5"/></button>
-        <div className="w-8 text-center font-semibold text-emerald-900">{value}</div>
-        <button onClick={() => onChange(value + 1)} className="w-8 h-8 rounded-full bg-white ring-1 ring-slate-200 flex items-center justify-center hover:bg-slate-50"><Plus className="w-3.5 h-3.5"/></button>
+        <button type="button" onClick={(e) => { e.stopPropagation(); onChange(Math.max(min, value - 1)) }} className="w-9 h-9 rounded-full bg-white ring-1 ring-slate-200 flex items-center justify-center hover:bg-emerald-50 hover:ring-emerald-500 active:scale-95 transition disabled:opacity-30" disabled={value <= min} aria-label={`Decrease ${label}`}><Minus className="w-4 h-4"/></button>
+        <div className="w-8 text-center font-semibold text-emerald-900 text-lg tabular-nums">{value}</div>
+        <button type="button" onClick={(e) => { e.stopPropagation(); onChange(value + 1) }} className="w-9 h-9 rounded-full bg-white ring-1 ring-slate-200 flex items-center justify-center hover:bg-emerald-50 hover:ring-emerald-500 active:scale-95 transition" aria-label={`Increase ${label}`}><Plus className="w-4 h-4"/></button>
       </div>
     </div>
   )
@@ -165,7 +165,7 @@ export default function Home() {
           </motion.div>
 
           {/* Functional Search Bar */}
-          <motion.form onSubmit={search} initial={{opacity:0,y:40}} animate={{opacity:1,y:0}} transition={{delay:0.3, duration:0.7}} className="relative mt-8 md:mt-14 glass rounded-2xl p-3 md:p-4 grid grid-cols-2 md:grid-cols-5 gap-3">
+          <motion.form onSubmit={search} initial={{opacity:0,y:40}} animate={{opacity:1,y:0}} transition={{delay:0.3, duration:0.7}} className="relative z-30 mt-8 md:mt-14 glass rounded-2xl p-3 md:p-4 grid grid-cols-2 md:grid-cols-5 gap-3">
             <label className="flex items-center gap-3 px-3 py-2 min-w-0">
               <div className="w-9 h-9 rounded-full bg-emerald-50 flex items-center justify-center shrink-0"><MapPin className="w-4 h-4 text-emerald-800"/></div>
               <div className="text-left flex-1 min-w-0">
@@ -196,20 +196,25 @@ export default function Home() {
               </div>
             </label>
             <div className="relative flex items-center gap-3 px-3 py-2 md:border-l border-slate-200 min-w-0">
-              <button type="button" onClick={() => setShowTravellers(v => !v)} className="flex items-center gap-3 w-full">
+              <button type="button" onClick={() => setShowTravellers(v => !v)} className="flex items-center gap-3 w-full hover:opacity-80 transition">
                 <div className="w-9 h-9 rounded-full bg-emerald-50 flex items-center justify-center shrink-0"><Users className="w-4 h-4 text-emerald-800"/></div>
                 <div className="text-left flex-1 min-w-0">
                   <div className="text-[10px] uppercase tracking-widest text-slate-500">Travellers</div>
                   <div className="text-sm font-semibold text-slate-800 truncate">{adults} Adult{adults!==1?'s':''} · {children} Child{children!==1?'ren':''}</div>
                 </div>
-                <ChevronDown className="w-4 h-4 text-slate-400"/>
+                <ChevronDown className={`w-4 h-4 text-slate-500 shrink-0 transition ${showTravellers ? 'rotate-180' : ''}`}/>
               </button>
               {showTravellers && (
-                <div className="absolute z-20 top-full mt-2 left-0 right-0 md:min-w-[280px] bg-white rounded-2xl shadow-2xl p-4 ring-1 ring-slate-100">
-                  <Stepper label="Adults" value={adults} min={1} onChange={setAdults}/>
-                  <Stepper label="Children" value={children} min={0} onChange={setChildren}/>
-                  <button type="button" onClick={() => setShowTravellers(false)} className="mt-2 w-full btn-primary rounded-full py-2 text-xs font-semibold">Done</button>
-                </div>
+                <>
+                  <div className="fixed inset-0 z-30" onClick={() => setShowTravellers(false)} aria-hidden="true"/>
+                  <div className="absolute z-40 top-full mt-2 left-0 right-0 md:left-auto md:right-0 md:w-[300px] bg-white rounded-2xl shadow-2xl p-5 ring-1 ring-slate-200">
+                    <div className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-2">Who is travelling?</div>
+                    <Stepper label="Adults" value={adults} min={1} onChange={setAdults}/>
+                    <div className="border-t border-slate-100 my-1"/>
+                    <Stepper label="Children" value={children} min={0} onChange={setChildren}/>
+                    <button type="button" onClick={() => setShowTravellers(false)} className="mt-3 w-full btn-primary rounded-full py-2.5 text-xs font-semibold">Done</button>
+                  </div>
+                </>
               )}
             </div>
             <button type="submit" className="btn-primary rounded-xl md:rounded-full px-5 py-3 text-sm font-semibold flex items-center justify-center gap-2 col-span-2 md:col-span-1">Search Packages <Search className="w-4 h-4"/></button>
