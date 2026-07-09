@@ -7,5 +7,5 @@
  * globals.css).
  */
 export default function SkyBackdrop() {
-  return <div className="absolute inset-0 -z-10 sky-bg" />
+  return <div suppressHydrationWarning className="absolute inset-0 -z-10 sky-bg" />
 }

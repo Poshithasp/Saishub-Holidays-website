@@ -264,7 +264,7 @@ export default function Home() {
       </section>
 
       {/* DESTINATIONS */}
-      <section className="relative py-16 sky-bg">
+      <section suppressHydrationWarning className="relative py-16 sky-bg">
         <div className="max-w-[1400px] mx-auto px-6 md:px-10">
           <div className="flex items-end justify-between flex-wrap gap-4 mb-6">
             <div>
@@ -285,7 +285,7 @@ export default function Home() {
       </section>
 
       {/* POPULAR PACKAGES */}
-      <section id="packages" className="relative py-16 sky-bg">
+      <section suppressHydrationWarning id="packages" className="relative py-16 sky-bg">
         <div className="max-w-[1400px] mx-auto px-6 md:px-10">
           <div className="flex items-end justify-between flex-wrap gap-4 mb-8">
             <div>
@@ -312,7 +312,7 @@ export default function Home() {
       </section>
 
       {/* CTA */}
-      <section className="relative py-20 sky-bg">
+      <section suppressHydrationWarning className="relative py-20 sky-bg">
         <div className="max-w-[1400px] mx-auto px-6 md:px-10">
           <motion.div initial={{opacity:0,y:30}} whileInView={{opacity:1,y:0}} viewport={{once:true}} className="relative rounded-3xl overflow-hidden ring-1 ring-white/40 shadow-2xl">
             {/* Pure scenic image as background — no gradient, no filter */}
