@@ -315,7 +315,7 @@ export default function Home() {
       <section className="relative py-20">
         <div className="max-w-[1400px] mx-auto px-6 md:px-10">
           <motion.div initial={{opacity:0,y:30}} whileInView={{opacity:1,y:0}} viewport={{once:true}} className="relative rounded-3xl overflow-hidden ring-1 ring-white/40 shadow-2xl">
-            <img src="https://images.unsplash.com/photo-1445019980597-93fa8acb246c?crop=entropy&cs=srgb&fm=jpg&q=85" loading="lazy" className="absolute inset-0 w-full h-full object-cover"/>
+            <img src="/images/scenic-bg.png" loading="lazy" className="absolute inset-0 w-full h-full object-cover"/>
             <div className="absolute inset-0 bg-gradient-to-r from-emerald-950/80 via-emerald-900/60 to-transparent"/>
             <div className="relative p-10 md:p-16 max-w-2xl text-white">
               <div className="tracking-[0.35em] text-xs text-amber-300 font-semibold uppercase">Your Journey Awaits</div>
