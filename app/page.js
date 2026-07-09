@@ -315,15 +315,15 @@ export default function Home() {
       <section className="relative py-20">
         <div className="max-w-[1400px] mx-auto px-6 md:px-10">
           <motion.div initial={{opacity:0,y:30}} whileInView={{opacity:1,y:0}} viewport={{once:true}} className="relative rounded-3xl overflow-hidden ring-1 ring-white/40 shadow-2xl">
+            {/* Pure scenic image as background — no gradient, no filter */}
             <img src="/images/scenic-bg.png" loading="lazy" className="absolute inset-0 w-full h-full object-cover"/>
-            <div className="absolute inset-0 bg-gradient-to-r from-emerald-950/80 via-emerald-900/60 to-transparent"/>
-            <div className="relative p-10 md:p-16 max-w-2xl text-white">
-              <div className="tracking-[0.35em] text-xs text-amber-300 font-semibold uppercase">Your Journey Awaits</div>
-              <h3 className="mt-3 font-display text-4xl md:text-6xl font-bold leading-tight">Let’s craft your <span className="gold-script font-serif-alt italic">next story.</span></h3>
-              <p className="mt-5 text-emerald-50/90 max-w-lg">Tell us where you dream, and we will design the itinerary, book the stays and be with you every mile of the way.</p>
+            <div className="relative p-10 md:p-16 max-w-2xl">
+              <div className="tracking-[0.35em] text-xs text-amber-700 font-semibold uppercase drop-shadow-[0_1px_2px_rgba(255,255,255,0.9)]">Your Journey Awaits</div>
+              <h3 className="mt-3 font-display text-4xl md:text-6xl font-bold leading-tight hero-gradient-text drop-shadow-[0_1px_2px_rgba(255,255,255,0.8)]">Let’s craft your <span className="gold-script font-serif-alt italic">next story.</span></h3>
+              <p className="mt-5 text-slate-800 max-w-lg font-medium drop-shadow-[0_1px_2px_rgba(255,255,255,0.9)]">Tell us where you dream, and we will design the itinerary, book the stays and be with you every mile of the way.</p>
               <div className="mt-8 flex flex-wrap gap-3">
-                <Link href="/contact" className="btn-primary rounded-full px-6 py-3.5 text-sm font-semibold flex items-center gap-2">Book Now <ArrowRight className="w-4 h-4"/></Link>
-                <a {...externalLinkProps(SOCIAL.whatsapp('Hi Saishubh Holidays, I would like to plan a trip.'))} className="rounded-full px-6 py-3.5 text-sm font-semibold bg-white text-emerald-900 flex items-center gap-2">WhatsApp Us</a>
+                <Link href="/contact" className="btn-primary rounded-full px-6 py-3.5 text-sm font-semibold flex items-center gap-2 shadow-lg">Book Now <ArrowRight className="w-4 h-4"/></Link>
+                <a {...externalLinkProps(SOCIAL.whatsapp('Hi Saishubh Holidays, I would like to plan a trip.'))} className="rounded-full px-6 py-3.5 text-sm font-semibold bg-white text-emerald-900 flex items-center gap-2 shadow-lg">WhatsApp Us</a>
               </div>
             </div>
           </motion.div>
