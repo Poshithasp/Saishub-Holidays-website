@@ -239,11 +239,18 @@ const TESTIMONIALS = [
 ]
 
 const GALLERY = [
-  { imageUrl: 'https://images.unsplash.com/photo-1682686581264-c47e25e61d95?crop=entropy&cs=srgb&fm=jpg&q=85', category: 'Domestic' },
-  { imageUrl: 'https://images.unsplash.com/photo-1523496922380-91d5afba98a3?crop=entropy&cs=srgb&fm=jpg&q=85', category: 'Domestic' },
-  { imageUrl: 'https://images.unsplash.com/photo-1573352763925-82bd5dfc31d1?crop=entropy&cs=srgb&fm=jpg&q=85', category: 'Pilgrimage' },
-  { imageUrl: 'https://images.unsplash.com/photo-1603766806347-54cdf3745953?crop=entropy&cs=srgb&fm=jpg&q=85', category: 'Pilgrimage' },
-  { imageUrl: 'https://images.unsplash.com/photo-1524443169398-9aa1ceab67d5?crop=entropy&cs=srgb&fm=jpg&q=85', category: 'Pilgrimage' },
+  // Uploaded destination photos (served from /public/images/packages)
+  { imageUrl: '/images/packages/mysore.jpg', category: 'Domestic' },
+  { imageUrl: '/images/packages/ooty.jpg', category: 'Domestic' },
+  { imageUrl: '/images/packages/kerala.webp', category: 'Domestic' },
+  { imageUrl: '/images/packages/hyderabad.webp', category: 'Domestic' },
+  { imageUrl: '/images/packages/delhi.jpg', category: 'Domestic' },
+  { imageUrl: '/images/packages/agra.jpg', category: 'Domestic' },
+  { imageUrl: '/images/packages/tirupati.jpg', category: 'Pilgrimage' },
+  { imageUrl: '/images/packages/rameshwaram.jpg', category: 'Pilgrimage' },
+  { imageUrl: '/images/packages/kanyakumari.jpg', category: 'Pilgrimage' },
+  { imageUrl: '/images/packages/shirdi.jpg', category: 'Pilgrimage' },
+  { imageUrl: '/images/packages/varanasi.jpg', category: 'Pilgrimage' },
 ]
 
 async function main() {
