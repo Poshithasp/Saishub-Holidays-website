@@ -28,7 +28,7 @@ const PACKAGES = [
     inclusions: ['AC transport from Bengaluru', 'Driver allowance & fuel', 'All toll & parking', 'Bottled water'],
     exclusions: ['Meals', 'Monument entry fees', 'Personal expenses'],
     gallery: [
-      'https://images.unsplash.com/photo-1570814671169-ce8f91015ffe?crop=entropy&cs=srgb&fm=jpg&q=85',
+      '/images/packages/mysore.jpg',
     ],
     mapUrl: 'https://www.google.com/maps/place/Mysuru,+Karnataka',
   },
