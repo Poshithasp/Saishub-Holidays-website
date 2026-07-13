@@ -48,7 +48,12 @@ export default function PackageDetailPage() {
 
   return (
     <PageShell eyebrow={pkg.category} title={pkg.name} subtitle={`${pkg.duration}  ·  Best time: ${pkg.bestTimeToVisit}  ·  From ${pkg.startingLocation}`}>
-      <div className="max-w-[1400px] mx-auto px-6 md:px-10 space-y-10">
+      <div className="relative">
+        {/* Full-section background: package photo rendered exactly as uploaded (no overlays) */}
+        <div aria-hidden="true" className="absolute inset-0" suppressHydrationWarning>
+          <img src={cover} alt="" className="w-full h-full object-cover" suppressHydrationWarning/>
+        </div>
+        <div className="relative max-w-[1400px] mx-auto px-6 md:px-10 space-y-10 py-12">
         {/* Hero image */}
         <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} className="relative rounded-3xl overflow-hidden h-[420px] shadow-2xl ring-1 ring-white/50">
           <img src={cover} className="absolute inset-0 w-full h-full object-cover" alt={pkg.name}/>
@@ -129,6 +134,7 @@ export default function PackageDetailPage() {
               </div>
             )}
           </aside>
+        </div>
         </div>
       </div>
     </PageShell>

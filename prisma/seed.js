@@ -121,7 +121,7 @@ const PACKAGES = [
     ],
     inclusions: ['AC transport', '4 nights hotel stay', 'Daily breakfast', 'Airport & inter-city transfers'],
     exclusions: ['Airfare', 'Lunch & dinner', 'Monument entry fees', 'Elephant ride fees', 'Personal expenses'],
-    gallery: ['https://images.unsplash.com/photo-1564507592333-c60657eea523?crop=entropy&cs=srgb&fm=jpg&q=85'],
+    gallery: ['/images/packages/delhi.jpg', '/images/packages/agra.jpg'],
     mapUrl: 'https://www.google.com/maps/place/Taj+Mahal',
   },
 
@@ -171,7 +171,7 @@ const PACKAGES = [
     ],
     inclusions: ['AC transport', '2 nights hotel', 'Breakfast', 'Temple darshan assistance'],
     exclusions: ['Special darshan tickets', 'Lunch & dinner', 'Personal expenses'],
-    gallery: ['https://images.pexels.com/photos/37936887/pexels-photo-37936887.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940'],
+    gallery: ['/images/packages/rameshwaram.jpg'],
     mapUrl: 'https://www.google.com/maps/place/Rameswaram,+Tamil+Nadu',
   },
   {
@@ -188,7 +188,7 @@ const PACKAGES = [
     ],
     inclusions: ['AC transport', '2 nights hotel', 'Breakfast'],
     exclusions: ['Special darshan / ferry tickets', 'Lunch & dinner', 'Personal expenses'],
-    gallery: ['https://images.pexels.com/photos/12752175/pexels-photo-12752175.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940'],
+    gallery: ['/images/packages/rameshwaram.jpg'],
     mapUrl: 'https://www.google.com/maps/place/Kanyakumari,+Tamil+Nadu',
   },
   {
@@ -205,7 +205,7 @@ const PACKAGES = [
     ],
     inclusions: ['AC transport', '2 nights hotel', 'Breakfast', 'Darshan queue assistance'],
     exclusions: ['VIP darshan tickets', 'Meals', 'Personal expenses'],
-    gallery: ['https://images.unsplash.com/photo-1524443169398-9aa1ceab67d5?crop=entropy&cs=srgb&fm=jpg&q=85'],
+    gallery: ['/images/packages/shirdi.jpg'],
     mapUrl: 'https://www.google.com/maps/place/Shirdi,+Maharashtra',
   },
   {
@@ -225,7 +225,7 @@ const PACKAGES = [
     ],
     inclusions: ['AC transport', '5 nights hotel', 'Daily breakfast', 'All temple assistance'],
     exclusions: ['Airfare', 'Pind Daan pooja materials', 'Lunch & dinner', 'Personal expenses'],
-    gallery: ['https://images.unsplash.com/photo-1524443169398-9aa1ceab67d5?crop=entropy&cs=srgb&fm=jpg&q=85'],
+    gallery: ['/images/packages/varanasi.jpg'],
     mapUrl: 'https://www.google.com/maps/place/Varanasi,+Uttar+Pradesh',
   },
 ]
