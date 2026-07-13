@@ -51,7 +51,7 @@ const PACKAGES = [
     ],
     inclusions: ['AC transport', '2 nights hotel stay', 'Daily breakfast', 'Driver allowance & fuel', 'All toll & parking'],
     exclusions: ['Lunch & dinner', 'Monument & garden entry fees', 'Toy train tickets', 'Personal expenses'],
-    gallery: ['https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?crop=entropy&cs=srgb&fm=jpg&q=85'],
+    gallery: ['/images/packages/ooty.jpg'],
     mapUrl: 'https://www.google.com/maps/place/Ooty,+Tamil+Nadu',
   },
   {
@@ -67,7 +67,7 @@ const PACKAGES = [
     ],
     inclusions: ['AC transport', '1 night hotel stay', 'Breakfast', 'Fuel, toll & parking'],
     exclusions: ['Lunch & dinner', 'Entry fees', 'Personal expenses'],
-    gallery: ['https://images.pexels.com/photos/7079773/pexels-photo-7079773.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940'],
+    gallery: ['/images/packages/ooty.jpg'],
     mapUrl: 'https://www.google.com/maps/place/Coonoor,+Tamil+Nadu',
   },
   {
@@ -85,7 +85,7 @@ const PACKAGES = [
     ],
     inclusions: ['AC transport', '2N hotel + 1N houseboat', 'Breakfast & houseboat full-board meals', 'Airport transfers'],
     exclusions: ['Airfare', 'Lunch & dinner (except houseboat day)', 'Entry fees', 'Personal expenses'],
-    gallery: ['https://images.unsplash.com/photo-1523496922380-91d5afba98a3?crop=entropy&cs=srgb&fm=jpg&q=85'],
+    gallery: ['/images/packages/kerala.webp'],
     mapUrl: 'https://www.google.com/maps/place/Alappuzha,+Kerala',
   },
   {
@@ -102,7 +102,7 @@ const PACKAGES = [
     ],
     inclusions: ['AC transport', '2 nights 3-star hotel', 'Breakfast', 'Ramoji entry tickets', 'Airport transfers'],
     exclusions: ['Airfare', 'Lunch & dinner', 'Monument entry fees', 'Personal expenses'],
-    gallery: ['https://images.unsplash.com/photo-1570814671169-ce8f91015ffe?crop=entropy&cs=srgb&fm=jpg&q=85'],
+    gallery: ['/images/packages/hyderabad.webp'],
     mapUrl: 'https://www.google.com/maps/place/Ramoji+Film+City',
   },
   {
@@ -138,7 +138,7 @@ const PACKAGES = [
     ],
     inclusions: ['AC transport', 'Toll, parking, driver allowance', 'Darshan queue guidance'],
     exclusions: ['Special entry darshan tickets (if opted)', 'Meals', 'Personal expenses'],
-    gallery: ['https://images.unsplash.com/photo-1603766806347-54cdf3745953?crop=entropy&cs=srgb&fm=jpg&q=85'],
+    gallery: ['/images/packages/tirupati.jpg'],
     mapUrl: 'https://www.google.com/maps/place/Tirumala',
   },
   {
@@ -154,7 +154,7 @@ const PACKAGES = [
     ],
     inclusions: ['AC transport', '1 night hotel', 'Breakfast', 'Darshan assistance'],
     exclusions: ['Special darshan tickets', 'Pooja materials', 'Personal expenses'],
-    gallery: ['https://images.unsplash.com/photo-1573352763925-82bd5dfc31d1?crop=entropy&cs=srgb&fm=jpg&q=85'],
+    gallery: ['/images/packages/tirupati.jpg'],
     mapUrl: 'https://www.google.com/maps/place/Srikalahasti',
   },
   {
@@ -188,7 +188,7 @@ const PACKAGES = [
     ],
     inclusions: ['AC transport', '2 nights hotel', 'Breakfast'],
     exclusions: ['Special darshan / ferry tickets', 'Lunch & dinner', 'Personal expenses'],
-    gallery: ['/images/packages/rameshwaram.jpg'],
+    gallery: ['/images/packages/kanyakumari.jpg'],
     mapUrl: 'https://www.google.com/maps/place/Kanyakumari,+Tamil+Nadu',
   },
   {
