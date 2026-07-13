@@ -1,5 +1,5 @@
 'use client'
-import { MessageCircle, Phone, FileText } from 'lucide-react'
+import { MessageCircle, Phone, Mail } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { usePathname } from 'next/navigation'
 import { externalLinkProps, SOCIAL } from '@/lib/externalLink'
@@ -11,7 +11,7 @@ export default function FloatingActions() {
   const actions = [
     { icon: MessageCircle, label: 'WhatsApp\nEnquiry', url: SOCIAL.whatsapp('Hi Saishubh Holidays, I would like to enquire about a tour package.'), color: 'from-emerald-500 to-emerald-700', external: true, pulse: true },
     { icon: Phone, label: 'Call Us', url: 'tel:+919945883774', color: 'from-emerald-600 to-emerald-800', external: false },
-    { icon: FileText, label: 'Brochure', url: '#', color: 'from-amber-500 to-amber-700', external: false },
+    { icon: Mail, label: 'Email Us', url: 'mailto:saishubholidays@gmail.com', color: 'from-amber-500 to-amber-700', external: false },
   ]
 
   return (
