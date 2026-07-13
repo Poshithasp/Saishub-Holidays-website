@@ -39,7 +39,7 @@ export default function Footer() {
         <div>
           <div className="font-display text-lg font-semibold text-amber-300">Reach Us</div>
           <ul className="mt-4 space-y-3 text-sm">
-            <li className="flex gap-2"><MapPin className="w-4 h-4 mt-0.5 text-amber-300"/><span className="text-emerald-100/80">108/3 Dr Rajkumar Road, Near Navrang Theatre, Rajajinagar, Bengaluru, Karnataka 560010</span></li>
+            <li className="flex gap-2"><MapPin className="w-4 h-4 mt-0.5 text-amber-300"/><span className="text-emerald-100/80">109/3 Dr Rajkumar Road, Near Navrang Theatre, Rajajinagar, Bengaluru, Karnataka 560010</span></li>
             <li className="flex gap-2 items-center"><Phone className="w-4 h-4 text-amber-300"/><a href="tel:9945883774" className="text-emerald-100/80 hover:text-amber-300">9945883774 / 9342196683</a></li>
             <li className="flex gap-2 items-center"><Mail className="w-4 h-4 text-amber-300"/><a href="mailto:saishubholidays@gmail.com" className="text-emerald-100/80 hover:text-amber-300">saishubholidays@gmail.com</a></li>
           </ul>

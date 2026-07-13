@@ -52,7 +52,7 @@ export default function ContactPage() {
             <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-800"><MapPin className="w-5 h-5"/></div>
             <div>
               <div className="font-semibold text-emerald-900">Our Office</div>
-              <div className="text-sm text-slate-600 mt-1">108/3 Dr Rajkumar Road, Near Navrang Theatre, Rajajinagar, Bengaluru, Karnataka 560010</div>
+              <div className="text-sm text-slate-600 mt-1">109/3 Dr Rajkumar Road, Near Navrang Theatre, Rajajinagar, Bengaluru, Karnataka 560010</div>
             </div>
           </div>
           <div className="flex gap-3">
