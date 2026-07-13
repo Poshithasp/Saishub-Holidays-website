@@ -78,6 +78,12 @@ export default function HydrationCleanup() {
   return (
     <script
       id="hydration-cleanup"
+      // The extension-cleanup script itself can be rewritten by aggressive
+      // script-blocking browser extensions (they swap the inline code for a
+      // `src=chrome-extension://...`), which triggers a hydration mismatch on
+      // this very element. suppressHydrationWarning tells React to ignore any
+      // attribute/content differences on this node.
+      suppressHydrationWarning
       // eslint-disable-next-line react/no-danger
       dangerouslySetInnerHTML={{ __html: script }}
     />
