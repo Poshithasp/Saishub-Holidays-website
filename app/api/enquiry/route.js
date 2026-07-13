@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { notifyNewEnquiry } from '@/lib/notifications'
+import { rateLimit, getClientIp } from '@/lib/rate-limit'
 
 export const dynamic = 'force-dynamic'
 
@@ -8,6 +9,17 @@ export const dynamic = 'force-dynamic'
 // Body: { name, phone, email?, message?, packageName?, travelDate? }
 export async function POST(request) {
   try {
+    // Abuse protection: max 5 enquiries / minute per IP (limits DB + paid
+    // email/WhatsApp notification spam).
+    const ip = getClientIp(request)
+    const rl = rateLimit(`enquiry:${ip}`, { max: 5, windowMs: 60_000 })
+    if (!rl.ok) {
+      return NextResponse.json(
+        { error: 'Too many enquiries. Please try again in a minute.' },
+        { status: 429, headers: { 'Retry-After': String(rl.retryAfter) } },
+      )
+    }
+
     const body = await request.json().catch(() => ({}))
     const { name, phone, email, message, packageName, travelDate } = body
 

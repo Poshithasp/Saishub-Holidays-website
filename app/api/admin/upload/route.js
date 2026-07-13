@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
 const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads')
-const ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'])
+const ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif'])
 const MAX_BYTES = 8 * 1024 * 1024 // 8MB
 
 // POST /api/admin/upload  (multipart/form-data with field 'file')

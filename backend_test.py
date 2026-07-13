@@ -1,862 +1,681 @@
 #!/usr/bin/env python3
 """
-Comprehensive backend API test suite for Saishubh Holidays
-Tests all public and admin endpoints with proper authentication
+Backend Security Testing for Saishubh Holidays
+Tests the new security hardening changes:
+- Cookie-only HttpOnly authentication
+- JWT secret hardening (no fallback)
+- Rate limiting on login and enquiry
+- SVG upload blocking
 """
 
 import requests
-import json
-import sys
+import jwt
+import time
+import io
+from datetime import datetime, timedelta
 
-# Base URL from environment
+# Base URL from .env
 BASE_URL = "https://travel-3d-cinema.preview.emergentagent.com/api"
 
-# Admin credentials
+# Admin credentials (new rotated password)
 ADMIN_USERNAME = "admin"
-ADMIN_PASSWORD = "admin123"
+ADMIN_PASSWORD = "Saishubh#VlOkNvW50UOp"
+OLD_PASSWORD = "admin123"
 
-# Test results tracking
-test_results = []
-admin_token = None
-test_package_id = None
-test_testimonial_id = None
-test_gallery_id = None
+# Test results
+results = {
+    "passed": 0,
+    "failed": 0,
+    "tests": []
+}
 
-
-def log_test(test_name, passed, details=""):
+def log_test(name, passed, details=""):
     """Log test result"""
     status = "✅ PASS" if passed else "❌ FAIL"
-    test_results.append({"name": test_name, "passed": passed, "details": details})
-    print(f"{status}: {test_name}")
+    print(f"{status}: {name}")
     if details:
-        print(f"   Details: {details}")
-
-
-def test_health():
-    """Test 1: GET /api/health"""
-    try:
-        resp = requests.get(f"{BASE_URL}/health", timeout=10)
-        data = resp.json()
-        passed = (
-            resp.status_code == 200
-            and data.get("ok") is True
-            and data.get("service") == "saishubh-holidays-api"
-        )
-        log_test(
-            "GET /api/health",
-            passed,
-            f"Status: {resp.status_code}, Response: {json.dumps(data)}"
-        )
-        return passed
-    except Exception as e:
-        log_test("GET /api/health", False, f"Exception: {str(e)}")
-        return False
-
-
-def test_get_packages():
-    """Test 2: GET /api/packages - should return 12 packages"""
-    global test_package_id
-    try:
-        resp = requests.get(f"{BASE_URL}/packages", timeout=10)
-        data = resp.json()
-        
-        passed = resp.status_code == 200 and data.get("count") == 12
-        
-        if passed and data.get("packages"):
-            # Verify package structure
-            pkg = data["packages"][0]
-            test_package_id = pkg.get("id")
-            required_fields = [
-                "id", "name", "category", "duration", "startingLocation",
-                "bestTimeToVisit", "highlights", "itinerary", "inclusions",
-                "exclusions", "gallery", "isActive"
-            ]
-            missing_fields = [f for f in required_fields if f not in pkg]
-            if missing_fields:
-                passed = False
-                log_test(
-                    "GET /api/packages",
-                    False,
-                    f"Missing fields: {missing_fields}"
-                )
-            else:
-                log_test(
-                    "GET /api/packages",
-                    True,
-                    f"Count: {data['count']}, First package ID: {test_package_id}"
-                )
-        else:
-            log_test(
-                "GET /api/packages",
-                False,
-                f"Status: {resp.status_code}, Count: {data.get('count')}"
-            )
-        return passed
-    except Exception as e:
-        log_test("GET /api/packages", False, f"Exception: {str(e)}")
-        return False
-
-
-def test_get_packages_pilgrimage():
-    """Test 3: GET /api/packages?category=Pilgrimage - should return 6"""
-    try:
-        resp = requests.get(f"{BASE_URL}/packages?category=Pilgrimage", timeout=10)
-        data = resp.json()
-        passed = resp.status_code == 200 and data.get("count") == 6
-        log_test(
-            "GET /api/packages?category=Pilgrimage",
-            passed,
-            f"Status: {resp.status_code}, Count: {data.get('count')}"
-        )
-        return passed
-    except Exception as e:
-        log_test("GET /api/packages?category=Pilgrimage", False, f"Exception: {str(e)}")
-        return False
-
-
-def test_get_packages_domestic():
-    """Test 4: GET /api/packages?category=Domestic - should return 6"""
-    try:
-        resp = requests.get(f"{BASE_URL}/packages?category=Domestic", timeout=10)
-        data = resp.json()
-        passed = resp.status_code == 200 and data.get("count") == 6
-        log_test(
-            "GET /api/packages?category=Domestic",
-            passed,
-            f"Status: {resp.status_code}, Count: {data.get('count')}"
-        )
-        return passed
-    except Exception as e:
-        log_test("GET /api/packages?category=Domestic", False, f"Exception: {str(e)}")
-        return False
-
-
-def test_get_package_by_id():
-    """Test 5: GET /api/packages/:id with valid ID"""
-    if not test_package_id:
-        log_test("GET /api/packages/:id (valid)", False, "No package ID available")
-        return False
-    
-    try:
-        resp = requests.get(f"{BASE_URL}/packages/{test_package_id}", timeout=10)
-        data = resp.json()
-        passed = resp.status_code == 200 and "package" in data
-        log_test(
-            "GET /api/packages/:id (valid)",
-            passed,
-            f"Status: {resp.status_code}, Package name: {data.get('package', {}).get('name')}"
-        )
-        return passed
-    except Exception as e:
-        log_test("GET /api/packages/:id (valid)", False, f"Exception: {str(e)}")
-        return False
-
-
-def test_get_package_by_invalid_id():
-    """Test 6: GET /api/packages/:id with bogus ID - should return 404"""
-    try:
-        bogus_id = "507f1f77bcf86cd799439011"  # Valid 24-char hex but non-existent
-        resp = requests.get(f"{BASE_URL}/packages/{bogus_id}", timeout=10)
-        passed = resp.status_code == 404
-        log_test(
-            "GET /api/packages/:id (invalid)",
-            passed,
-            f"Status: {resp.status_code}"
-        )
-        return passed
-    except Exception as e:
-        log_test("GET /api/packages/:id (invalid)", False, f"Exception: {str(e)}")
-        return False
-
-
-def test_get_testimonials():
-    """Test 7: GET /api/testimonials - should return 5 active testimonials"""
-    try:
-        resp = requests.get(f"{BASE_URL}/testimonials", timeout=10)
-        data = resp.json()
-        passed = resp.status_code == 200 and data.get("count") == 5
-        
-        # Verify all are active
-        if passed and data.get("testimonials"):
-            all_active = all(t.get("isActive") for t in data["testimonials"])
-            if not all_active:
-                passed = False
-                log_test("GET /api/testimonials", False, "Not all testimonials are active")
-            else:
-                log_test("GET /api/testimonials", True, f"Count: {data['count']}, all active")
-        else:
-            log_test("GET /api/testimonials", False, f"Status: {resp.status_code}, Count: {data.get('count')}")
-        return passed
-    except Exception as e:
-        log_test("GET /api/testimonials", False, f"Exception: {str(e)}")
-        return False
-
-
-def test_get_gallery():
-    """Test 8: GET /api/gallery - should return 5 items"""
-    try:
-        resp = requests.get(f"{BASE_URL}/gallery", timeout=10)
-        data = resp.json()
-        passed = resp.status_code == 200 and data.get("count") == 5
-        log_test(
-            "GET /api/gallery",
-            passed,
-            f"Status: {resp.status_code}, Count: {data.get('count')}"
-        )
-        return passed
-    except Exception as e:
-        log_test("GET /api/gallery", False, f"Exception: {str(e)}")
-        return False
-
-
-def test_get_gallery_pilgrimage():
-    """Test 9: GET /api/gallery?category=Pilgrimage"""
-    try:
-        resp = requests.get(f"{BASE_URL}/gallery?category=Pilgrimage", timeout=10)
-        data = resp.json()
-        passed = resp.status_code == 200 and data.get("count") == 3
-        log_test(
-            "GET /api/gallery?category=Pilgrimage",
-            passed,
-            f"Status: {resp.status_code}, Count: {data.get('count')}"
-        )
-        return passed
-    except Exception as e:
-        log_test("GET /api/gallery?category=Pilgrimage", False, f"Exception: {str(e)}")
-        return False
-
-
-def test_post_enquiry_valid():
-    """Test 10: POST /api/enquiry with valid data"""
-    try:
-        payload = {
-            "name": "Test User",
-            "phone": "+91 9945883774",
-            "email": "test@test.com",
-            "message": "Interested in Bali",
-            "packageName": "Mysore Sightseeing - 1 Day"
-        }
-        resp = requests.post(f"{BASE_URL}/enquiry", json=payload, timeout=10)
-        data = resp.json()
-        passed = resp.status_code == 201 and data.get("ok") is True and "enquiry" in data
-        log_test(
-            "POST /api/enquiry (valid)",
-            passed,
-            f"Status: {resp.status_code}, Enquiry ID: {data.get('enquiry', {}).get('id')}"
-        )
-        return passed
-    except Exception as e:
-        log_test("POST /api/enquiry (valid)", False, f"Exception: {str(e)}")
-        return False
-
-
-def test_post_enquiry_missing_phone():
-    """Test 11: POST /api/enquiry with missing phone - should return 400"""
-    try:
-        payload = {"name": "NoPhone"}
-        resp = requests.post(f"{BASE_URL}/enquiry", json=payload, timeout=10)
-        passed = resp.status_code == 400
-        log_test(
-            "POST /api/enquiry (missing phone)",
-            passed,
-            f"Status: {resp.status_code}"
-        )
-        return passed
-    except Exception as e:
-        log_test("POST /api/enquiry (missing phone)", False, f"Exception: {str(e)}")
-        return False
-
-
-def test_post_enquiry_invalid_email():
-    """Test 12: POST /api/enquiry with invalid email - should return 400"""
-    try:
-        payload = {
-            "name": "X",
-            "phone": "9999999999",
-            "email": "not-an-email"
-        }
-        resp = requests.post(f"{BASE_URL}/enquiry", json=payload, timeout=10)
-        passed = resp.status_code == 400
-        log_test(
-            "POST /api/enquiry (invalid email)",
-            passed,
-            f"Status: {resp.status_code}"
-        )
-        return passed
-    except Exception as e:
-        log_test("POST /api/enquiry (invalid email)", False, f"Exception: {str(e)}")
-        return False
-
-
-def test_admin_login_success():
-    """Test 13: POST /api/admin/login with valid credentials"""
-    global admin_token
-    try:
-        payload = {"username": ADMIN_USERNAME, "password": ADMIN_PASSWORD}
-        resp = requests.post(f"{BASE_URL}/admin/login", json=payload, timeout=10)
-        data = resp.json()
-        passed = (
-            resp.status_code == 200
-            and "token" in data
-            and "admin" in data
-        )
-        if passed:
-            admin_token = data["token"]
-            log_test(
-                "POST /api/admin/login (valid)",
-                True,
-                f"Status: {resp.status_code}, Token received"
-            )
-        else:
-            log_test(
-                "POST /api/admin/login (valid)",
-                False,
-                f"Status: {resp.status_code}, Response: {json.dumps(data)}"
-            )
-        return passed
-    except Exception as e:
-        log_test("POST /api/admin/login (valid)", False, f"Exception: {str(e)}")
-        return False
-
-
-def test_admin_login_wrong_password():
-    """Test 14: POST /api/admin/login with wrong password - should return 401"""
-    try:
-        payload = {"username": ADMIN_USERNAME, "password": "WRONG"}
-        resp = requests.post(f"{BASE_URL}/admin/login", json=payload, timeout=10)
-        passed = resp.status_code == 401
-        log_test(
-            "POST /api/admin/login (wrong password)",
-            passed,
-            f"Status: {resp.status_code}"
-        )
-        return passed
-    except Exception as e:
-        log_test("POST /api/admin/login (wrong password)", False, f"Exception: {str(e)}")
-        return False
-
-
-def test_admin_login_missing_fields():
-    """Test 15: POST /api/admin/login with missing fields - should return 400"""
-    try:
-        payload = {}
-        resp = requests.post(f"{BASE_URL}/admin/login", json=payload, timeout=10)
-        passed = resp.status_code == 400
-        log_test(
-            "POST /api/admin/login (missing fields)",
-            passed,
-            f"Status: {resp.status_code}"
-        )
-        return passed
-    except Exception as e:
-        log_test("POST /api/admin/login (missing fields)", False, f"Exception: {str(e)}")
-        return False
-
-
-def test_admin_enquiries_no_auth():
-    """Test 16: GET /api/admin/enquiries without auth - should return 401"""
-    try:
-        resp = requests.get(f"{BASE_URL}/admin/enquiries", timeout=10)
-        passed = resp.status_code == 401
-        log_test(
-            "GET /api/admin/enquiries (no auth)",
-            passed,
-            f"Status: {resp.status_code}"
-        )
-        return passed
-    except Exception as e:
-        log_test("GET /api/admin/enquiries (no auth)", False, f"Exception: {str(e)}")
-        return False
-
-
-def test_admin_enquiries_invalid_token():
-    """Test 17: GET /api/admin/enquiries with invalid token - should return 401"""
-    try:
-        headers = {"Authorization": "Bearer INVALID_TOKEN"}
-        resp = requests.get(f"{BASE_URL}/admin/enquiries", headers=headers, timeout=10)
-        passed = resp.status_code == 401
-        log_test(
-            "GET /api/admin/enquiries (invalid token)",
-            passed,
-            f"Status: {resp.status_code}"
-        )
-        return passed
-    except Exception as e:
-        log_test("GET /api/admin/enquiries (invalid token)", False, f"Exception: {str(e)}")
-        return False
-
-
-def test_admin_enquiries_valid():
-    """Test 18: GET /api/admin/enquiries with valid token"""
-    if not admin_token:
-        log_test("GET /api/admin/enquiries (valid)", False, "No admin token available")
-        return False
-    
-    try:
-        headers = {"Authorization": f"Bearer {admin_token}"}
-        resp = requests.get(f"{BASE_URL}/admin/enquiries", headers=headers, timeout=10)
-        data = resp.json()
-        passed = (
-            resp.status_code == 200
-            and "total" in data
-            and "count" in data
-            and "enquiries" in data
-        )
-        log_test(
-            "GET /api/admin/enquiries (valid)",
-            passed,
-            f"Status: {resp.status_code}, Total: {data.get('total')}, Count: {data.get('count')}"
-        )
-        return passed
-    except Exception as e:
-        log_test("GET /api/admin/enquiries (valid)", False, f"Exception: {str(e)}")
-        return False
-
-
-def test_admin_packages_non_allowed_name():
-    """Test 19: POST /api/admin/packages with non-allowed name - should return 400"""
-    if not admin_token:
-        log_test("POST /api/admin/packages (non-allowed name)", False, "No admin token")
-        return False
-    
-    try:
-        headers = {"Authorization": f"Bearer {admin_token}"}
-        payload = {
-            "name": "Bali Holiday",
-            "category": "International",
-            "duration": "5 Days",
-            "startingLocation": "Bengaluru",
-            "bestTimeToVisit": "Year-round",
-            "highlights": [],
-            "itinerary": [],
-            "inclusions": [],
-            "exclusions": [],
-            "gallery": []
-        }
-        resp = requests.post(f"{BASE_URL}/admin/packages", json=payload, headers=headers, timeout=10)
-        data = resp.json()
-        passed = resp.status_code == 400 and "allowedForCategory" in data
-        log_test(
-            "POST /api/admin/packages (non-allowed name)",
-            passed,
-            f"Status: {resp.status_code}, Has allowedForCategory: {'allowedForCategory' in data}"
-        )
-        return passed
-    except Exception as e:
-        log_test("POST /api/admin/packages (non-allowed name)", False, f"Exception: {str(e)}")
-        return False
-
-
-def test_admin_packages_duplicate_name():
-    """Test 20: POST /api/admin/packages with existing allowed name - should return 409"""
-    if not admin_token:
-        log_test("POST /api/admin/packages (duplicate)", False, "No admin token")
-        return False
-    
-    try:
-        headers = {"Authorization": f"Bearer {admin_token}"}
-        payload = {
-            "name": "Mysore Sightseeing - 1 Day",
-            "category": "Domestic",
-            "duration": "1 Day",
-            "startingLocation": "Bengaluru",
-            "bestTimeToVisit": "Oct-Mar",
-            "highlights": [],
-            "itinerary": [],
-            "inclusions": [],
-            "exclusions": [],
-            "gallery": []
-        }
-        resp = requests.post(f"{BASE_URL}/admin/packages", json=payload, headers=headers, timeout=10)
-        passed = resp.status_code == 409
-        log_test(
-            "POST /api/admin/packages (duplicate)",
-            passed,
-            f"Status: {resp.status_code}"
-        )
-        return passed
-    except Exception as e:
-        log_test("POST /api/admin/packages (duplicate)", False, f"Exception: {str(e)}")
-        return False
-
-
-def test_admin_packages_update():
-    """Test 21: PUT /api/admin/packages/:id with valid update"""
-    if not admin_token or not test_package_id:
-        log_test("PUT /api/admin/packages/:id", False, "No admin token or package ID")
-        return False
-    
-    try:
-        headers = {"Authorization": f"Bearer {admin_token}"}
-        payload = {"duration": "1 Day Updated"}
-        resp = requests.put(
-            f"{BASE_URL}/admin/packages/{test_package_id}",
-            json=payload,
-            headers=headers,
-            timeout=10
-        )
-        data = resp.json()
-        passed = resp.status_code == 200 and "package" in data
-        log_test(
-            "PUT /api/admin/packages/:id (valid update)",
-            passed,
-            f"Status: {resp.status_code}"
-        )
-        
-        # Restore original duration
-        if passed:
-            restore_payload = {"duration": "1 Day"}
-            requests.put(
-                f"{BASE_URL}/admin/packages/{test_package_id}",
-                json=restore_payload,
-                headers=headers,
-                timeout=10
-            )
-        
-        return passed
-    except Exception as e:
-        log_test("PUT /api/admin/packages/:id (valid update)", False, f"Exception: {str(e)}")
-        return False
-
-
-def test_admin_packages_update_non_allowed_name():
-    """Test 22: PUT /api/admin/packages/:id with non-allowed name - should return 400"""
-    if not admin_token or not test_package_id:
-        log_test("PUT /api/admin/packages/:id (non-allowed name)", False, "No admin token or package ID")
-        return False
-    
-    try:
-        headers = {"Authorization": f"Bearer {admin_token}"}
-        payload = {"name": "XYZ Random"}
-        resp = requests.put(
-            f"{BASE_URL}/admin/packages/{test_package_id}",
-            json=payload,
-            headers=headers,
-            timeout=10
-        )
-        passed = resp.status_code == 400
-        log_test(
-            "PUT /api/admin/packages/:id (non-allowed name)",
-            passed,
-            f"Status: {resp.status_code}"
-        )
-        return passed
-    except Exception as e:
-        log_test("PUT /api/admin/packages/:id (non-allowed name)", False, f"Exception: {str(e)}")
-        return False
-
-
-def test_admin_packages_delete_invalid_id():
-    """Test 23: DELETE /api/admin/packages/:id with bogus ID - should return 404"""
-    if not admin_token:
-        log_test("DELETE /api/admin/packages/:id (invalid)", False, "No admin token")
-        return False
-    
-    try:
-        headers = {"Authorization": f"Bearer {admin_token}"}
-        bogus_id = "507f1f77bcf86cd799439011"
-        resp = requests.delete(
-            f"{BASE_URL}/admin/packages/{bogus_id}",
-            headers=headers,
-            timeout=10
-        )
-        passed = resp.status_code == 404
-        log_test(
-            "DELETE /api/admin/packages/:id (invalid)",
-            passed,
-            f"Status: {resp.status_code}"
-        )
-        return passed
-    except Exception as e:
-        log_test("DELETE /api/admin/packages/:id (invalid)", False, f"Exception: {str(e)}")
-        return False
-
-
-def test_admin_testimonials_create():
-    """Test 24: POST /api/admin/testimonials with valid data"""
-    global test_testimonial_id
-    if not admin_token:
-        log_test("POST /api/admin/testimonials (valid)", False, "No admin token")
-        return False
-    
-    try:
-        headers = {"Authorization": f"Bearer {admin_token}"}
-        payload = {
-            "name": "Test",
-            "message": "Great",
-            "rating": 5,
-            "location": "BLR"
-        }
-        resp = requests.post(f"{BASE_URL}/admin/testimonials", json=payload, headers=headers, timeout=10)
-        data = resp.json()
-        passed = resp.status_code == 201 and "testimonial" in data
-        if passed:
-            test_testimonial_id = data["testimonial"].get("id")
-            log_test(
-                "POST /api/admin/testimonials (valid)",
-                True,
-                f"Status: {resp.status_code}, ID: {test_testimonial_id}"
-            )
-        else:
-            log_test(
-                "POST /api/admin/testimonials (valid)",
-                False,
-                f"Status: {resp.status_code}"
-            )
-        return passed
-    except Exception as e:
-        log_test("POST /api/admin/testimonials (valid)", False, f"Exception: {str(e)}")
-        return False
-
-
-def test_admin_testimonials_invalid_rating():
-    """Test 25: POST /api/admin/testimonials with rating=6 - should return 400"""
-    if not admin_token:
-        log_test("POST /api/admin/testimonials (invalid rating)", False, "No admin token")
-        return False
-    
-    try:
-        headers = {"Authorization": f"Bearer {admin_token}"}
-        payload = {
-            "name": "Test",
-            "message": "Great",
-            "rating": 6,
-            "location": "BLR"
-        }
-        resp = requests.post(f"{BASE_URL}/admin/testimonials", json=payload, headers=headers, timeout=10)
-        passed = resp.status_code == 400
-        log_test(
-            "POST /api/admin/testimonials (invalid rating)",
-            passed,
-            f"Status: {resp.status_code}"
-        )
-        return passed
-    except Exception as e:
-        log_test("POST /api/admin/testimonials (invalid rating)", False, f"Exception: {str(e)}")
-        return False
-
-
-def test_admin_testimonials_update():
-    """Test 26: PUT /api/admin/testimonials/:id to deactivate"""
-    if not admin_token or not test_testimonial_id:
-        log_test("PUT /api/admin/testimonials/:id", False, "No admin token or testimonial ID")
-        return False
-    
-    try:
-        headers = {"Authorization": f"Bearer {admin_token}"}
-        payload = {"isActive": False}
-        resp = requests.put(
-            f"{BASE_URL}/admin/testimonials/{test_testimonial_id}",
-            json=payload,
-            headers=headers,
-            timeout=10
-        )
-        passed = resp.status_code == 200
-        log_test(
-            "PUT /api/admin/testimonials/:id",
-            passed,
-            f"Status: {resp.status_code}"
-        )
-        return passed
-    except Exception as e:
-        log_test("PUT /api/admin/testimonials/:id", False, f"Exception: {str(e)}")
-        return False
-
-
-def test_admin_testimonials_delete():
-    """Test 27: DELETE /api/admin/testimonials/:id"""
-    if not admin_token or not test_testimonial_id:
-        log_test("DELETE /api/admin/testimonials/:id", False, "No admin token or testimonial ID")
-        return False
-    
-    try:
-        headers = {"Authorization": f"Bearer {admin_token}"}
-        resp = requests.delete(
-            f"{BASE_URL}/admin/testimonials/{test_testimonial_id}",
-            headers=headers,
-            timeout=10
-        )
-        passed = resp.status_code == 200
-        log_test(
-            "DELETE /api/admin/testimonials/:id",
-            passed,
-            f"Status: {resp.status_code}"
-        )
-        return passed
-    except Exception as e:
-        log_test("DELETE /api/admin/testimonials/:id", False, f"Exception: {str(e)}")
-        return False
-
-
-def test_admin_gallery_create():
-    """Test 28: POST /api/admin/gallery with valid data"""
-    global test_gallery_id
-    if not admin_token:
-        log_test("POST /api/admin/gallery (valid)", False, "No admin token")
-        return False
-    
-    try:
-        headers = {"Authorization": f"Bearer {admin_token}"}
-        payload = {
-            "imageUrl": "https://images.unsplash.com/photo-test.jpg",
-            "category": "Test"
-        }
-        resp = requests.post(f"{BASE_URL}/admin/gallery", json=payload, headers=headers, timeout=10)
-        data = resp.json()
-        passed = resp.status_code == 201 and "gallery" in data
-        if passed:
-            test_gallery_id = data["gallery"].get("id")
-            log_test(
-                "POST /api/admin/gallery (valid)",
-                True,
-                f"Status: {resp.status_code}, ID: {test_gallery_id}"
-            )
-        else:
-            log_test(
-                "POST /api/admin/gallery (valid)",
-                False,
-                f"Status: {resp.status_code}"
-            )
-        return passed
-    except Exception as e:
-        log_test("POST /api/admin/gallery (valid)", False, f"Exception: {str(e)}")
-        return False
-
-
-def test_admin_gallery_invalid_url():
-    """Test 29: POST /api/admin/gallery with invalid URL - should return 400"""
-    if not admin_token:
-        log_test("POST /api/admin/gallery (invalid URL)", False, "No admin token")
-        return False
-    
-    try:
-        headers = {"Authorization": f"Bearer {admin_token}"}
-        payload = {
-            "imageUrl": "not-a-url",
-            "category": "Test"
-        }
-        resp = requests.post(f"{BASE_URL}/admin/gallery", json=payload, headers=headers, timeout=10)
-        passed = resp.status_code == 400
-        log_test(
-            "POST /api/admin/gallery (invalid URL)",
-            passed,
-            f"Status: {resp.status_code}"
-        )
-        return passed
-    except Exception as e:
-        log_test("POST /api/admin/gallery (invalid URL)", False, f"Exception: {str(e)}")
-        return False
-
-
-def test_admin_gallery_delete():
-    """Test 30: DELETE /api/admin/gallery/:id"""
-    if not admin_token or not test_gallery_id:
-        log_test("DELETE /api/admin/gallery/:id", False, "No admin token or gallery ID")
-        return False
-    
-    try:
-        headers = {"Authorization": f"Bearer {admin_token}"}
-        resp = requests.delete(
-            f"{BASE_URL}/admin/gallery/{test_gallery_id}",
-            headers=headers,
-            timeout=10
-        )
-        passed = resp.status_code == 200
-        log_test(
-            "DELETE /api/admin/gallery/:id",
-            passed,
-            f"Status: {resp.status_code}"
-        )
-        return passed
-    except Exception as e:
-        log_test("DELETE /api/admin/gallery/:id", False, f"Exception: {str(e)}")
-        return False
-
+        print(f"  Details: {details}")
+    results["tests"].append({"name": name, "passed": passed, "details": details})
+    if passed:
+        results["passed"] += 1
+    else:
+        results["failed"] += 1
 
 def print_summary():
     """Print test summary"""
     print("\n" + "="*80)
-    print("TEST SUMMARY")
+    print(f"BACKEND SECURITY TEST SUMMARY")
+    print(f"Total: {results['passed'] + results['failed']} | Passed: {results['passed']} | Failed: {results['failed']}")
     print("="*80)
-    
-    passed = sum(1 for t in test_results if t["passed"])
-    failed = sum(1 for t in test_results if not t["passed"])
-    total = len(test_results)
-    
-    print(f"\nTotal Tests: {total}")
-    print(f"Passed: {passed} ✅")
-    print(f"Failed: {failed} ❌")
-    print(f"Success Rate: {(passed/total*100):.1f}%\n")
-    
-    if failed > 0:
-        print("Failed Tests:")
-        for t in test_results:
-            if not t["passed"]:
-                print(f"  ❌ {t['name']}")
-                if t["details"]:
-                    print(f"     {t['details']}")
-    
-    print("="*80)
-    return failed == 0
+    if results["failed"] > 0:
+        print("\nFailed Tests:")
+        for test in results["tests"]:
+            if not test["passed"]:
+                print(f"  ❌ {test['name']}")
+                if test["details"]:
+                    print(f"     {test['details']}")
 
+# ============================================================================
+# SEC-001: Cookie-Only HttpOnly Authentication
+# ============================================================================
+
+def test_login_with_new_password():
+    """Test login with new rotated password"""
+    print("\n[SEC-001] Testing login with new password...")
+    try:
+        session = requests.Session()
+        resp = session.post(f"{BASE_URL}/admin/login", json={
+            "username": ADMIN_USERNAME,
+            "password": ADMIN_PASSWORD
+        })
+        
+        # Check status
+        if resp.status_code != 200:
+            log_test("Login with new password (status)", False, f"Expected 200, got {resp.status_code}")
+            return None
+        log_test("Login with new password (status)", True, "Returns 200")
+        
+        # Check response body
+        data = resp.json()
+        if "token" in data:
+            log_test("Login response (no token field)", False, "Response contains 'token' field (should be cookie-only)")
+            return None
+        log_test("Login response (no token field)", True, "Token not in response body")
+        
+        if not data.get("ok"):
+            log_test("Login response (ok field)", False, f"Expected ok:true, got {data}")
+            return None
+        log_test("Login response (ok field)", True, "Response has ok:true")
+        
+        if not data.get("admin"):
+            log_test("Login response (admin field)", False, "Missing admin object")
+            return None
+        log_test("Login response (admin field)", True, f"Admin object present: {data['admin']}")
+        
+        # Check HttpOnly cookie
+        cookie_header = resp.headers.get("Set-Cookie", "")
+        if "sh_token=" not in cookie_header:
+            log_test("Login cookie (sh_token present)", False, "sh_token cookie not set")
+            return None
+        log_test("Login cookie (sh_token present)", True, "sh_token cookie set")
+        
+        # Check HttpOnly flag
+        if "HttpOnly" not in cookie_header:
+            log_test("Login cookie (HttpOnly flag)", False, f"HttpOnly flag missing: {cookie_header}")
+            return None
+        log_test("Login cookie (HttpOnly flag)", True, "HttpOnly flag present")
+        
+        # Check Secure flag
+        if "Secure" not in cookie_header:
+            log_test("Login cookie (Secure flag)", False, f"Secure flag missing: {cookie_header}")
+            return None
+        log_test("Login cookie (Secure flag)", True, "Secure flag present")
+        
+        # Check SameSite
+        if "SameSite" not in cookie_header:
+            log_test("Login cookie (SameSite flag)", False, f"SameSite flag missing: {cookie_header}")
+            return None
+        log_test("Login cookie (SameSite flag)", True, "SameSite flag present")
+        
+        return session
+    except Exception as e:
+        log_test("Login with new password", False, f"Exception: {str(e)}")
+        return None
+
+def test_login_with_old_password():
+    """Test that old password is rejected"""
+    print("\n[SEC-001] Testing login with old password (must fail)...")
+    try:
+        resp = requests.post(f"{BASE_URL}/admin/login", json={
+            "username": ADMIN_USERNAME,
+            "password": OLD_PASSWORD
+        })
+        
+        if resp.status_code == 401:
+            log_test("Login with old password (rejected)", True, "Old password correctly rejected with 401")
+        else:
+            log_test("Login with old password (rejected)", False, f"Expected 401, got {resp.status_code}")
+    except Exception as e:
+        log_test("Login with old password", False, f"Exception: {str(e)}")
+
+def test_login_with_wrong_password():
+    """Test login with random wrong password"""
+    print("\n[SEC-001] Testing login with wrong password...")
+    try:
+        resp = requests.post(f"{BASE_URL}/admin/login", json={
+            "username": ADMIN_USERNAME,
+            "password": "WrongPassword123!"
+        })
+        
+        if resp.status_code == 401:
+            log_test("Login with wrong password", True, "Wrong password rejected with 401")
+        else:
+            log_test("Login with wrong password", False, f"Expected 401, got {resp.status_code}")
+    except Exception as e:
+        log_test("Login with wrong password", False, f"Exception: {str(e)}")
+
+def test_login_missing_fields():
+    """Test login with missing username/password"""
+    print("\n[SEC-001] Testing login with missing fields...")
+    try:
+        # Missing password
+        resp = requests.post(f"{BASE_URL}/admin/login", json={
+            "username": ADMIN_USERNAME
+        })
+        if resp.status_code == 400:
+            log_test("Login missing password", True, "Missing password returns 400")
+        else:
+            log_test("Login missing password", False, f"Expected 400, got {resp.status_code}")
+        
+        # Missing username
+        resp = requests.post(f"{BASE_URL}/admin/login", json={
+            "password": ADMIN_PASSWORD
+        })
+        if resp.status_code == 400:
+            log_test("Login missing username", True, "Missing username returns 400")
+        else:
+            log_test("Login missing username", False, f"Expected 400, got {resp.status_code}")
+    except Exception as e:
+        log_test("Login missing fields", False, f"Exception: {str(e)}")
+
+def test_protected_endpoint_without_cookie(session):
+    """Test protected endpoint without cookie"""
+    print("\n[SEC-001] Testing protected endpoint without cookie...")
+    try:
+        # Create new session without cookie
+        resp = requests.get(f"{BASE_URL}/admin/enquiries")
+        
+        if resp.status_code == 401:
+            log_test("Protected endpoint without cookie", True, "Returns 401 without cookie")
+        else:
+            log_test("Protected endpoint without cookie", False, f"Expected 401, got {resp.status_code}")
+    except Exception as e:
+        log_test("Protected endpoint without cookie", False, f"Exception: {str(e)}")
+
+def test_protected_endpoint_with_cookie(session):
+    """Test protected endpoint with valid cookie"""
+    print("\n[SEC-001] Testing protected endpoint with cookie...")
+    try:
+        resp = session.get(f"{BASE_URL}/admin/enquiries")
+        
+        if resp.status_code == 200:
+            data = resp.json()
+            log_test("Protected endpoint with cookie", True, f"Returns 200, got {data.get('total', 0)} enquiries")
+        else:
+            log_test("Protected endpoint with cookie", False, f"Expected 200, got {resp.status_code}")
+    except Exception as e:
+        log_test("Protected endpoint with cookie", False, f"Exception: {str(e)}")
+
+def test_forged_jwt_fallback_secret():
+    """Test that JWT signed with old fallback secret is rejected"""
+    print("\n[SEC-001 CRITICAL] Testing forged JWT with fallback_dev_secret...")
+    try:
+        # Forge JWT with old fallback secret
+        payload = {
+            "sub": "forged_user",
+            "username": "admin",
+            "role": "admin",
+            "exp": datetime.utcnow() + timedelta(hours=1)
+        }
+        forged_token = jwt.encode(payload, "fallback_dev_secret", algorithm="HS256")
+        
+        # Test 1: Send as Cookie
+        resp = requests.get(
+            f"{BASE_URL}/admin/enquiries",
+            cookies={"sh_token": forged_token}
+        )
+        if resp.status_code == 401:
+            log_test("Forged JWT (fallback_dev_secret) as Cookie", True, "Correctly rejected with 401")
+        else:
+            log_test("Forged JWT (fallback_dev_secret) as Cookie", False, f"SECURITY BREACH: Expected 401, got {resp.status_code}")
+        
+        # Test 2: Send as Bearer token
+        resp = requests.get(
+            f"{BASE_URL}/admin/enquiries",
+            headers={"Authorization": f"Bearer {forged_token}"}
+        )
+        if resp.status_code == 401:
+            log_test("Forged JWT (fallback_dev_secret) as Bearer", True, "Correctly rejected with 401")
+        else:
+            log_test("Forged JWT (fallback_dev_secret) as Bearer", False, f"SECURITY BREACH: Expected 401, got {resp.status_code}")
+    except Exception as e:
+        log_test("Forged JWT (fallback_dev_secret)", False, f"Exception: {str(e)}")
+
+def test_forged_jwt_old_committed_secret():
+    """Test that JWT signed with old committed secret is rejected"""
+    print("\n[SEC-001 CRITICAL] Testing forged JWT with old committed secret...")
+    try:
+        # Forge JWT with old committed secret
+        payload = {
+            "sub": "forged_user",
+            "username": "admin",
+            "role": "admin",
+            "exp": datetime.utcnow() + timedelta(hours=1)
+        }
+        forged_token = jwt.encode(payload, "saishubh_super_secret_key_change_in_production_2026", algorithm="HS256")
+        
+        # Test 1: Send as Cookie
+        resp = requests.get(
+            f"{BASE_URL}/admin/enquiries",
+            cookies={"sh_token": forged_token}
+        )
+        if resp.status_code == 401:
+            log_test("Forged JWT (old committed secret) as Cookie", True, "Correctly rejected with 401")
+        else:
+            log_test("Forged JWT (old committed secret) as Cookie", False, f"SECURITY BREACH: Expected 401, got {resp.status_code}")
+        
+        # Test 2: Send as Bearer token
+        resp = requests.get(
+            f"{BASE_URL}/admin/enquiries",
+            headers={"Authorization": f"Bearer {forged_token}"}
+        )
+        if resp.status_code == 401:
+            log_test("Forged JWT (old committed secret) as Bearer", True, "Correctly rejected with 401")
+        else:
+            log_test("Forged JWT (old committed secret) as Bearer", False, f"SECURITY BREACH: Expected 401, got {resp.status_code}")
+    except Exception as e:
+        log_test("Forged JWT (old committed secret)", False, f"Exception: {str(e)}")
+
+# ============================================================================
+# SEC-002: Rate Limiting
+# ============================================================================
+
+def test_login_rate_limit():
+    """Test login rate limiting (>10 attempts/min)"""
+    print("\n[SEC-002] Testing login rate limiting (>10 attempts/min)...")
+    try:
+        # Make 11 rapid login attempts
+        rate_limited = False
+        for i in range(12):
+            resp = requests.post(f"{BASE_URL}/admin/login", json={
+                "username": ADMIN_USERNAME,
+                "password": "wrong_password"
+            })
+            if resp.status_code == 429:
+                rate_limited = True
+                retry_after = resp.headers.get("Retry-After")
+                log_test("Login rate limiting (429 after limit)", True, f"Rate limited after {i+1} attempts, Retry-After: {retry_after}s")
+                break
+            time.sleep(0.1)  # Small delay between requests
+        
+        if not rate_limited:
+            log_test("Login rate limiting", False, "Did not receive 429 after 12 attempts")
+    except Exception as e:
+        log_test("Login rate limiting", False, f"Exception: {str(e)}")
+
+def test_enquiry_rate_limit():
+    """Test enquiry rate limiting (>5 attempts/min)"""
+    print("\n[SEC-002] Testing enquiry rate limiting (>5 attempts/min)...")
+    try:
+        # First, test a single valid enquiry works
+        resp = requests.post(f"{BASE_URL}/enquiry", json={
+            "name": "Rate Limit Test User",
+            "phone": "+91-9876543210",
+            "email": "ratelimit@test.com",
+            "message": "Testing rate limit"
+        })
+        if resp.status_code == 201:
+            log_test("Enquiry before rate limit", True, "Valid enquiry returns 201")
+        else:
+            log_test("Enquiry before rate limit", False, f"Expected 201, got {resp.status_code}")
+        
+        # Now flood with 6 more requests
+        rate_limited = False
+        for i in range(7):
+            resp = requests.post(f"{BASE_URL}/enquiry", json={
+                "name": f"Flood Test {i}",
+                "phone": "+91-9876543210",
+                "email": f"flood{i}@test.com"
+            })
+            if resp.status_code == 429:
+                rate_limited = True
+                retry_after = resp.headers.get("Retry-After")
+                log_test("Enquiry rate limiting (429 after limit)", True, f"Rate limited after {i+1} more attempts, Retry-After: {retry_after}s")
+                break
+            time.sleep(0.1)
+        
+        if not rate_limited:
+            log_test("Enquiry rate limiting", False, "Did not receive 429 after flooding")
+    except Exception as e:
+        log_test("Enquiry rate limiting", False, f"Exception: {str(e)}")
+
+# ============================================================================
+# SEC-004: Upload Security
+# ============================================================================
+
+def test_upload_svg_blocked(session):
+    """Test that SVG upload is blocked"""
+    print("\n[SEC-004] Testing SVG upload (must be blocked)...")
+    try:
+        # Create a fake SVG file
+        svg_content = b'<svg xmlns="http://www.w3.org/2000/svg"><script>alert("XSS")</script></svg>'
+        files = {
+            'file': ('evil.svg', io.BytesIO(svg_content), 'image/svg+xml')
+        }
+        
+        resp = session.post(f"{BASE_URL}/admin/upload", files=files)
+        
+        if resp.status_code == 400:
+            data = resp.json()
+            if "Unsupported file type" in data.get("error", ""):
+                log_test("SVG upload blocked", True, f"SVG correctly rejected: {data['error']}")
+            else:
+                log_test("SVG upload blocked", False, f"Got 400 but wrong error: {data}")
+        else:
+            log_test("SVG upload blocked", False, f"SECURITY BREACH: Expected 400, got {resp.status_code}")
+    except Exception as e:
+        log_test("SVG upload blocked", False, f"Exception: {str(e)}")
+
+def test_upload_png_allowed(session):
+    """Test that PNG upload is allowed"""
+    print("\n[SEC-004] Testing PNG upload (should work)...")
+    try:
+        # Create a minimal valid PNG (1x1 transparent pixel)
+        png_content = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\nIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01\r\n-\xb4\x00\x00\x00\x00IEND\xaeB`\x82'
+        files = {
+            'file': ('test.png', io.BytesIO(png_content), 'image/png')
+        }
+        
+        resp = session.post(f"{BASE_URL}/admin/upload", files=files)
+        
+        if resp.status_code == 200:
+            data = resp.json()
+            if data.get("ok") and data.get("url"):
+                log_test("PNG upload allowed", True, f"PNG uploaded successfully: {data['url']}")
+            else:
+                log_test("PNG upload allowed", False, f"Got 200 but unexpected response: {data}")
+        else:
+            log_test("PNG upload allowed", False, f"Expected 200, got {resp.status_code}: {resp.text}")
+    except Exception as e:
+        log_test("PNG upload allowed", False, f"Exception: {str(e)}")
+
+# ============================================================================
+# Regression Tests: Verify existing endpoints still work
+# ============================================================================
+
+def test_public_endpoints():
+    """Test public endpoints still work"""
+    print("\n[REGRESSION] Testing public endpoints...")
+    try:
+        # Health check
+        resp = requests.get(f"{BASE_URL}/health")
+        if resp.status_code == 200 and resp.json().get("ok"):
+            log_test("GET /api/health", True, "Returns ok")
+        else:
+            log_test("GET /api/health", False, f"Expected 200 with ok:true, got {resp.status_code}")
+        
+        # Packages list
+        resp = requests.get(f"{BASE_URL}/packages")
+        if resp.status_code == 200:
+            data = resp.json()
+            count = data.get("count", 0)
+            if count == 12:
+                log_test("GET /api/packages", True, f"Returns {count} packages")
+            else:
+                log_test("GET /api/packages", False, f"Expected 12 packages, got {count}")
+        else:
+            log_test("GET /api/packages", False, f"Expected 200, got {resp.status_code}")
+        
+        # Packages filter by category
+        resp = requests.get(f"{BASE_URL}/packages?category=Pilgrimage")
+        if resp.status_code == 200:
+            data = resp.json()
+            count = data.get("count", 0)
+            if count == 6:
+                log_test("GET /api/packages?category=Pilgrimage", True, f"Returns {count} packages")
+            else:
+                log_test("GET /api/packages?category=Pilgrimage", False, f"Expected 6 packages, got {count}")
+        else:
+            log_test("GET /api/packages?category=Pilgrimage", False, f"Expected 200, got {resp.status_code}")
+        
+        resp = requests.get(f"{BASE_URL}/packages?category=Domestic")
+        if resp.status_code == 200:
+            data = resp.json()
+            count = data.get("count", 0)
+            if count == 6:
+                log_test("GET /api/packages?category=Domestic", True, f"Returns {count} packages")
+            else:
+                log_test("GET /api/packages?category=Domestic", False, f"Expected 6 packages, got {count}")
+        else:
+            log_test("GET /api/packages?category=Domestic", False, f"Expected 200, got {resp.status_code}")
+        
+        # Get first package by ID
+        resp = requests.get(f"{BASE_URL}/packages")
+        if resp.status_code == 200:
+            packages = resp.json().get("packages", [])
+            if packages:
+                pkg_id = packages[0]["id"]
+                resp = requests.get(f"{BASE_URL}/packages/{pkg_id}")
+                if resp.status_code == 200:
+                    log_test("GET /api/packages/:id (valid)", True, "Returns package details")
+                else:
+                    log_test("GET /api/packages/:id (valid)", False, f"Expected 200, got {resp.status_code}")
+        
+        # Bogus package ID
+        resp = requests.get(f"{BASE_URL}/packages/507f1f77bcf86cd799439011")
+        if resp.status_code == 404:
+            log_test("GET /api/packages/:id (bogus)", True, "Returns 404 for bogus ID")
+        else:
+            log_test("GET /api/packages/:id (bogus)", False, f"Expected 404, got {resp.status_code}")
+        
+        # Testimonials
+        resp = requests.get(f"{BASE_URL}/testimonials")
+        if resp.status_code == 200:
+            data = resp.json()
+            log_test("GET /api/testimonials", True, f"Returns {len(data.get('testimonials', []))} testimonials")
+        else:
+            log_test("GET /api/testimonials", False, f"Expected 200, got {resp.status_code}")
+        
+        # Gallery
+        resp = requests.get(f"{BASE_URL}/gallery")
+        if resp.status_code == 200:
+            data = resp.json()
+            log_test("GET /api/gallery", True, f"Returns {len(data.get('images', []))} images")
+        else:
+            log_test("GET /api/gallery", False, f"Expected 200, got {resp.status_code}")
+        
+    except Exception as e:
+        log_test("Public endpoints", False, f"Exception: {str(e)}")
+
+def test_enquiry_validation():
+    """Test enquiry validation still works"""
+    print("\n[REGRESSION] Testing enquiry validation...")
+    try:
+        # Valid enquiry (before rate limit)
+        resp = requests.post(f"{BASE_URL}/enquiry", json={
+            "name": "John Doe",
+            "phone": "+91-9876543210",
+            "email": "john@example.com",
+            "message": "Interested in Mysore package"
+        })
+        if resp.status_code == 201:
+            log_test("POST /api/enquiry (valid)", True, "Valid enquiry returns 201")
+        else:
+            log_test("POST /api/enquiry (valid)", False, f"Expected 201, got {resp.status_code}")
+        
+        # Missing phone
+        resp = requests.post(f"{BASE_URL}/enquiry", json={
+            "name": "Jane Doe",
+            "email": "jane@example.com"
+        })
+        if resp.status_code == 400:
+            log_test("POST /api/enquiry (missing phone)", True, "Missing phone returns 400")
+        else:
+            log_test("POST /api/enquiry (missing phone)", False, f"Expected 400, got {resp.status_code}")
+        
+        # Invalid email
+        resp = requests.post(f"{BASE_URL}/enquiry", json={
+            "name": "Bob Smith",
+            "phone": "+91-9876543210",
+            "email": "invalid-email"
+        })
+        if resp.status_code == 400:
+            log_test("POST /api/enquiry (invalid email)", True, "Invalid email returns 400")
+        else:
+            log_test("POST /api/enquiry (invalid email)", False, f"Expected 400, got {resp.status_code}")
+    except Exception as e:
+        log_test("Enquiry validation", False, f"Exception: {str(e)}")
+
+def test_admin_crud_with_cookie(session):
+    """Test admin CRUD operations with cookie auth"""
+    print("\n[REGRESSION] Testing admin CRUD with cookie auth...")
+    try:
+        # Test POST /api/admin/packages with non-allowed name
+        resp = session.post(f"{BASE_URL}/admin/packages", json={
+            "name": "Random Unauthorized Trip",
+            "category": "Domestic",
+            "duration": "3 Days",
+            "startingLocation": "Bangalore"
+        })
+        if resp.status_code == 400:
+            data = resp.json()
+            if "allowedForCategory" in data.get("error", ""):
+                log_test("POST /api/admin/packages (non-allowed name)", True, "Non-allowed name rejected with 400")
+            else:
+                log_test("POST /api/admin/packages (non-allowed name)", False, f"Got 400 but wrong error: {data}")
+        else:
+            log_test("POST /api/admin/packages (non-allowed name)", False, f"Expected 400, got {resp.status_code}")
+        
+        # Test POST /api/admin/packages with already-seeded name
+        resp = session.post(f"{BASE_URL}/admin/packages", json={
+            "name": "Mysore Sightseeing - 1 Day",
+            "category": "Domestic",
+            "duration": "1 Day",
+            "startingLocation": "Bangalore"
+        })
+        if resp.status_code == 409:
+            log_test("POST /api/admin/packages (duplicate name)", True, "Duplicate name rejected with 409")
+        else:
+            log_test("POST /api/admin/packages (duplicate name)", False, f"Expected 409, got {resp.status_code}")
+        
+        # Test PUT /api/admin/packages/:id
+        resp = session.get(f"{BASE_URL}/packages")
+        if resp.status_code == 200:
+            packages = resp.json().get("packages", [])
+            if packages:
+                pkg_id = packages[0]["id"]
+                resp = session.put(f"{BASE_URL}/admin/packages/{pkg_id}", json={
+                    "duration": "5 Days 4 Nights"
+                })
+                if resp.status_code == 200:
+                    log_test("PUT /api/admin/packages/:id", True, "Package update returns 200")
+                else:
+                    log_test("PUT /api/admin/packages/:id", False, f"Expected 200, got {resp.status_code}")
+        
+        # Test testimonials CRUD
+        resp = session.post(f"{BASE_URL}/admin/testimonials", json={
+            "name": "Test User",
+            "rating": 5,
+            "comment": "Great service!",
+            "packageName": "Mysore Sightseeing - 1 Day"
+        })
+        if resp.status_code == 201:
+            testimonial_id = resp.json().get("testimonial", {}).get("id")
+            log_test("POST /api/admin/testimonials", True, "Testimonial created")
+            
+            # Update
+            resp = session.put(f"{BASE_URL}/admin/testimonials/{testimonial_id}", json={
+                "isActive": False
+            })
+            if resp.status_code == 200:
+                log_test("PUT /api/admin/testimonials/:id", True, "Testimonial updated")
+            else:
+                log_test("PUT /api/admin/testimonials/:id", False, f"Expected 200, got {resp.status_code}")
+            
+            # Delete
+            resp = session.delete(f"{BASE_URL}/admin/testimonials/{testimonial_id}")
+            if resp.status_code == 200:
+                log_test("DELETE /api/admin/testimonials/:id", True, "Testimonial deleted")
+            else:
+                log_test("DELETE /api/admin/testimonials/:id", False, f"Expected 200, got {resp.status_code}")
+        else:
+            log_test("POST /api/admin/testimonials", False, f"Expected 201, got {resp.status_code}")
+        
+        # Test gallery CRUD
+        resp = session.post(f"{BASE_URL}/admin/gallery", json={
+            "imageUrl": "https://example.com/test.jpg",
+            "title": "Test Image",
+            "category": "Domestic"
+        })
+        if resp.status_code == 201:
+            gallery_id = resp.json().get("image", {}).get("id")
+            log_test("POST /api/admin/gallery", True, "Gallery image created")
+            
+            # Delete
+            resp = session.delete(f"{BASE_URL}/admin/gallery/{gallery_id}")
+            if resp.status_code == 200:
+                log_test("DELETE /api/admin/gallery/:id", True, "Gallery image deleted")
+            else:
+                log_test("DELETE /api/admin/gallery/:id", False, f"Expected 200, got {resp.status_code}")
+        else:
+            log_test("POST /api/admin/gallery", False, f"Expected 201, got {resp.status_code}")
+        
+        # Test invalid gallery URL
+        resp = session.post(f"{BASE_URL}/admin/gallery", json={
+            "imageUrl": "not-a-url",
+            "title": "Invalid",
+            "category": "Domestic"
+        })
+        if resp.status_code == 400:
+            log_test("POST /api/admin/gallery (invalid URL)", True, "Invalid URL rejected with 400")
+        else:
+            log_test("POST /api/admin/gallery (invalid URL)", False, f"Expected 400, got {resp.status_code}")
+        
+        # Test GET /api/admin/enquiries
+        resp = session.get(f"{BASE_URL}/admin/enquiries")
+        if resp.status_code == 200:
+            data = resp.json()
+            log_test("GET /api/admin/enquiries", True, f"Returns {data.get('total', 0)} enquiries")
+        else:
+            log_test("GET /api/admin/enquiries", False, f"Expected 200, got {resp.status_code}")
+    except Exception as e:
+        log_test("Admin CRUD with cookie", False, f"Exception: {str(e)}")
+
+# ============================================================================
+# Main Test Runner
+# ============================================================================
 
 def main():
-    """Run all tests"""
     print("="*80)
-    print("SAISHUBH HOLIDAYS BACKEND API TEST SUITE")
+    print("BACKEND SECURITY TESTING - Saishubh Holidays")
     print("="*80)
-    print(f"Base URL: {BASE_URL}\n")
     
-    # Public API tests
-    print("\n--- PUBLIC API TESTS ---\n")
-    test_health()
-    test_get_packages()
-    test_get_packages_pilgrimage()
-    test_get_packages_domestic()
-    test_get_package_by_id()
-    test_get_package_by_invalid_id()
-    test_get_testimonials()
-    test_get_gallery()
-    test_get_gallery_pilgrimage()
-    test_post_enquiry_valid()
-    test_post_enquiry_missing_phone()
-    test_post_enquiry_invalid_email()
-    
-    # Admin authentication tests
-    print("\n--- ADMIN AUTHENTICATION TESTS ---\n")
-    test_admin_login_success()
-    test_admin_login_wrong_password()
-    test_admin_login_missing_fields()
-    test_admin_enquiries_no_auth()
-    test_admin_enquiries_invalid_token()
-    test_admin_enquiries_valid()
-    
-    # Admin package enforcement tests
-    print("\n--- ADMIN PACKAGE ENFORCEMENT TESTS ---\n")
-    test_admin_packages_non_allowed_name()
-    test_admin_packages_duplicate_name()
-    test_admin_packages_update()
-    test_admin_packages_update_non_allowed_name()
-    test_admin_packages_delete_invalid_id()
-    
-    # Admin testimonials tests
-    print("\n--- ADMIN TESTIMONIALS TESTS ---\n")
-    test_admin_testimonials_create()
-    test_admin_testimonials_invalid_rating()
-    test_admin_testimonials_update()
-    test_admin_testimonials_delete()
-    
-    # Admin gallery tests
-    print("\n--- ADMIN GALLERY TESTS ---\n")
-    test_admin_gallery_create()
-    test_admin_gallery_invalid_url()
-    test_admin_gallery_delete()
+    # SEC-001: Cookie-Only HttpOnly Authentication
+    session = test_login_with_new_password()
+    if session:
+        test_login_with_old_password()
+        test_login_with_wrong_password()
+        test_login_missing_fields()
+        test_protected_endpoint_without_cookie(session)
+        test_protected_endpoint_with_cookie(session)
+        test_forged_jwt_fallback_secret()
+        test_forged_jwt_old_committed_secret()
+        
+        # Regression tests with cookie auth
+        test_public_endpoints()
+        test_enquiry_validation()
+        test_admin_crud_with_cookie(session)
+        
+        # SEC-004: Upload Security
+        test_upload_svg_blocked(session)
+        test_upload_png_allowed(session)
+        
+        # SEC-002: Rate Limiting (run LAST as they consume the per-IP budget)
+        print("\n⚠️  Running rate limit tests last (they consume per-IP budget)...")
+        time.sleep(2)  # Brief pause before rate limit tests
+        test_enquiry_rate_limit()
+        test_login_rate_limit()
+    else:
+        print("\n❌ Login failed, skipping remaining tests")
     
     # Print summary
-    all_passed = print_summary()
+    print_summary()
     
-    sys.exit(0 if all_passed else 1)
-
+    # Exit with appropriate code
+    if results["failed"] > 0:
+        exit(1)
+    else:
+        exit(0)
 
 if __name__ == "__main__":
     main()

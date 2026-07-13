@@ -249,14 +249,20 @@ const GALLERY = [
 async function main() {
   console.log('\ud83c\udf31 Seeding Saishubh Holidays database\u2026')
 
-  // 1. Admin
-  const passwordHash = await bcrypt.hash('admin123', 10)
-  await prisma.admin.upsert({
-    where: { username: 'admin' },
-    update: { passwordHash, role: 'admin' },
-    create: { username: 'admin', passwordHash, role: 'admin' },
-  })
-  console.log('  \u2713 Admin ready (username: admin / password: admin123)')
+  // 1. Admin — created once from env; never reset on re-run (idempotent & safe).
+  const adminUsername = process.env.ADMIN_USERNAME || 'admin'
+  const adminPassword = process.env.ADMIN_PASSWORD
+  const existingAdmin = await prisma.admin.findUnique({ where: { username: adminUsername } })
+  if (!existingAdmin) {
+    if (!adminPassword) {
+      throw new Error('ADMIN_PASSWORD env var is required to create the initial admin account.')
+    }
+    const passwordHash = await bcrypt.hash(adminPassword, 10)
+    await prisma.admin.create({ data: { username: adminUsername, passwordHash, role: 'admin' } })
+    console.log(`  \u2713 Admin created (username: ${adminUsername}); password taken from ADMIN_PASSWORD`)
+  } else {
+    console.log(`  \u2713 Admin already exists (username: ${adminUsername}); password left unchanged`)
+  }
 
   // 2. Packages
   for (const p of PACKAGES) {

@@ -9,12 +9,12 @@
 import { NextResponse } from 'next/server'
 import { jwtVerify } from 'jose'
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'fallback_dev_secret'
-)
+const JWT_SECRET = process.env.JWT_SECRET
+  ? new TextEncoder().encode(process.env.JWT_SECRET)
+  : null
 
 async function verify(token) {
-  if (!token) return null
+  if (!token || !JWT_SECRET) return null
   try {
     const { payload } = await jwtVerify(token, JWT_SECRET)
     if (payload?.role !== 'admin') return null

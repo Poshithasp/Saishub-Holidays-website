@@ -16,27 +16,13 @@ const TABS = [
 
 export default function AdminDashboard() {
   const router = useRouter()
-  const [token, setToken] = useState(null)
-  const [admin, setAdmin] = useState(null)
   const [tab, setTab] = useState('packages')
 
-  useEffect(() => {
-    const t = localStorage.getItem('sh_token')
-    const a = localStorage.getItem('sh_admin')
-    if (!t) { router.replace('/admin'); return }
-    setToken(t)
-    setAdmin(a ? JSON.parse(a) : null)
-  }, [router])
-
-  const logout = () => {
-    localStorage.removeItem('sh_token')
-    localStorage.removeItem('sh_admin')
-    document.cookie = 'sh_token=; path=/; max-age=0; SameSite=Lax'
+  // Auth is enforced server-side by the Edge middleware (HttpOnly cookie).
+  // If this component renders, the request already passed authentication.
+  const logout = async () => {
+    try { await api.logout() } catch {}
     router.replace('/admin')
-  }
-
-  if (!token) {
-    return <div className="min-h-screen flex items-center justify-center sky-bg"><Loader2 className="w-6 h-6 animate-spin text-emerald-700"/></div>
   }
 
   return (
@@ -67,17 +53,17 @@ export default function AdminDashboard() {
       </header>
 
       <main className="max-w-[1400px] mx-auto px-4 md:px-8 py-8">
-        {tab === 'packages' && <PackagesTab token={token}/>}
-        {tab === 'testimonials' && <TestimonialsTab token={token}/>}
-        {tab === 'gallery' && <GalleryTab token={token}/>}
-        {tab === 'enquiries' && <EnquiriesTab token={token}/>}
+        {tab === 'packages' && <PackagesTab/>}
+        {tab === 'testimonials' && <TestimonialsTab/>}
+        {tab === 'gallery' && <GalleryTab/>}
+        {tab === 'enquiries' && <EnquiriesTab/>}
       </main>
     </div>
   )
 }
 
 /* ---------------- PACKAGES ---------------- */
-function PackagesTab({ token }) {
+function PackagesTab() {
   const [items, setItems] = useState(null)
   const [editing, setEditing] = useState(null)
   const [saving, setSaving] = useState(false)
@@ -91,7 +77,7 @@ function PackagesTab({ token }) {
 
   const toggleActive = async (p) => {
     try {
-      const res = await api.adminUpdatePackage(token, p.id, { isActive: !p.isActive })
+      const res = await api.adminUpdatePackage(p.id, { isActive: !p.isActive })
       setItems(list => list.map(x => x.id === p.id ? res.package : x))
     } catch (e) { alert(e.message) }
   }
@@ -136,12 +122,12 @@ function PackagesTab({ token }) {
         ))}
       </div>
 
-      {editing && <PackageEditModal token={token} pkg={editing} onClose={() => setEditing(null)} onSaved={(updated) => { setItems(list => list.map(x => x.id === updated.id ? updated : x)); setEditing(null) }}/>}
+      {editing && <PackageEditModal pkg={editing} onClose={() => setEditing(null)} onSaved={(updated) => { setItems(list => list.map(x => x.id === updated.id ? updated : x)); setEditing(null) }}/>}
     </div>
   )
 }
 
-function PackageEditModal({ token, pkg, onClose, onSaved }) {
+function PackageEditModal({ pkg, onClose, onSaved }) {
   const [form, setForm] = useState({
     duration: pkg.duration || '',
     startingLocation: pkg.startingLocation || '',
@@ -176,7 +162,7 @@ function PackageEditModal({ token, pkg, onClose, onSaved }) {
         mapUrl: form.mapUrl || null,
         isActive: form.isActive,
       }
-      const res = await api.adminUpdatePackage(token, pkg.id, body)
+      const res = await api.adminUpdatePackage(pkg.id, body)
       onSaved(res.package)
     } catch (e) { setErr(e.message) } finally { setSaving(false) }
   }
@@ -211,7 +197,7 @@ function PackageEditModal({ token, pkg, onClose, onSaved }) {
 }
 
 /* ---------------- TESTIMONIALS ---------------- */
-function TestimonialsTab({ token }) {
+function TestimonialsTab() {
   const [items, setItems] = useState(null)
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState({ name: '', rating: 5, message: '', location: '', isActive: true })
@@ -227,7 +213,7 @@ function TestimonialsTab({ token }) {
     if (!form.name || !form.message) return alert('Name and message required')
     setSaving(true)
     try {
-      await api.adminCreateTestimonial(token, form)
+      await api.adminCreateTestimonial(form)
       setForm({ name: '', rating: 5, message: '', location: '', isActive: true })
       setShowForm(false); load()
     } catch (e) { alert(e.message) } finally { setSaving(false) }
@@ -235,14 +221,14 @@ function TestimonialsTab({ token }) {
 
   const toggle = async (t) => {
     try {
-      await api.adminUpdateTestimonial(token, t.id, { isActive: !t.isActive })
+      await api.adminUpdateTestimonial(t.id, { isActive: !t.isActive })
       load()
     } catch (e) { alert(e.message) }
   }
 
   const del = async (id) => {
     if (!confirm('Delete this testimonial?')) return
-    try { await api.adminDeleteTestimonial(token, id); load() } catch (e) { alert(e.message) }
+    try { await api.adminDeleteTestimonial(id); load() } catch (e) { alert(e.message) }
   }
 
   return (
@@ -297,7 +283,7 @@ function TestimonialsTab({ token }) {
 }
 
 /* ---------------- GALLERY ---------------- */
-function GalleryTab({ token }) {
+function GalleryTab() {
   const [items, setItems] = useState(null)
   const [category, setCategory] = useState('General')
 
@@ -309,7 +295,7 @@ function GalleryTab({ token }) {
 
   const del = async (id) => {
     if (!confirm('Remove this image from gallery?')) return
-    try { await api.adminDeleteGallery(token, id); load() } catch (e) { alert(e.message) }
+    try { await api.adminDeleteGallery(id); load() } catch (e) { alert(e.message) }
   }
 
   return (
@@ -331,7 +317,7 @@ function GalleryTab({ token }) {
       </div>
 
       <div className="bg-white rounded-2xl p-5 shadow-sm ring-1 ring-slate-100 mb-6">
-        <MultiImageUpload token={token} category={category} onDone={() => load()}/>
+        <MultiImageUpload category={category} onDone={() => load()}/>
       </div>
 
       <h3 className="font-display text-xl font-bold text-emerald-900 mb-3">Current Gallery ({items?.length ?? 0})</h3>
@@ -351,13 +337,13 @@ function GalleryTab({ token }) {
 }
 
 /* ---------------- ENQUIRIES ---------------- */
-function EnquiriesTab({ token }) {
+function EnquiriesTab() {
   const [data, setData] = useState(null)
 
   const load = useCallback(() => {
     setData(null)
-    api.adminEnquiries(token).then(setData).catch(()=>setData({ enquiries: [], total: 0 }))
-  }, [token])
+    api.adminEnquiries().then(setData).catch(()=>setData({ enquiries: [], total: 0 }))
+  }, [])
   useEffect(load, [load])
 
   return (

@@ -9,14 +9,16 @@ import api from '@/lib/api'
 // - Creates a matching Gallery row for each via /api/admin/gallery
 // - Emits progress per file
 //
-// Props: { token, category, onDone(count) }
-export default function MultiImageUpload({ token, category = 'General', onDone }) {
+// Props: { category, onDone(count) }  — auth via HttpOnly cookie
+const ACCEPTED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif'])
+
+export default function MultiImageUpload({ category = 'General', onDone }) {
   const [items, setItems] = useState([]) // [{file, id, status, url, error}]
   const [dragOver, setDragOver] = useState(false)
   const inputRef = useRef(null)
 
   const addFiles = useCallback((fileList) => {
-    const files = Array.from(fileList).filter(f => f.type.startsWith('image/'))
+    const files = Array.from(fileList).filter(f => ACCEPTED_TYPES.has(f.type))
     if (files.length === 0) return
     setItems(prev => [...prev, ...files.map(f => ({ file: f, id: `${f.name}-${f.size}-${Math.random().toString(36).slice(2, 7)}`, status: 'queued' }))])
   }, [])
@@ -36,9 +38,9 @@ export default function MultiImageUpload({ token, category = 'General', onDone }
     for (const it of queued) {
       setItems(prev => prev.map(i => i.id === it.id ? { ...i, status: 'uploading' } : i))
       try {
-        const up = await api.adminUpload(token, it.file)
+        const up = await api.adminUpload(it.file)
         const publicUrl = `${window.location.origin}${up.url}`
-        await api.adminCreateGallery(token, { imageUrl: publicUrl, category })
+        await api.adminCreateGallery({ imageUrl: publicUrl, category })
         setItems(prev => prev.map(i => i.id === it.id ? { ...i, status: 'done', url: publicUrl } : i))
         done++
       } catch (err) {
@@ -62,10 +64,10 @@ export default function MultiImageUpload({ token, category = 'General', onDone }
         onClick={() => inputRef.current?.click()}
         className={`rounded-2xl border-2 border-dashed p-8 text-center cursor-pointer transition ${dragOver ? 'border-emerald-500 bg-emerald-50' : 'border-slate-300 bg-white hover:border-emerald-400 hover:bg-emerald-50/50'}`}
       >
-        <input ref={inputRef} type="file" accept="image/*" multiple className="hidden" onChange={onFilePick}/>
+        <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple className="hidden" onChange={onFilePick}/>
         <UploadCloud className="w-10 h-10 mx-auto text-emerald-700"/>
         <div className="mt-3 font-semibold text-emerald-900">Drop images here, or click to choose</div>
-        <div className="text-xs text-slate-500 mt-1">JPG, PNG, WEBP, GIF, SVG — up to 8MB each. Multi-select supported.</div>
+        <div className="text-xs text-slate-500 mt-1">JPG, PNG, WEBP, GIF — up to 8MB each. Multi-select supported.</div>
       </div>
 
       {items.length > 0 && (

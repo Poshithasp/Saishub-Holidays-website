@@ -24,15 +24,24 @@ const nextConfig = {
     pagesBufferLength: 2,
   },
   async headers() {
+    // frame-ancestors kept configurable: default '*' so the app renders inside
+    // the Emergent preview iframe. For a hardened production deploy set
+    // FRAME_ANCESTORS='self'.
+    const frameAncestors = process.env.FRAME_ANCESTORS || "*"
+    // CORS scoped to the app's own origin (same-origin cookie auth). Set
+    // CORS_ORIGINS to a specific origin in production.
+    const corsOrigin = process.env.CORS_ORIGINS || process.env.NEXT_PUBLIC_BASE_URL || ""
     return [
       {
         source: "/(.*)",
         headers: [
-          { key: "X-Frame-Options", value: "ALLOWALL" },
-          { key: "Content-Security-Policy", value: "frame-ancestors *;" },
-          { key: "Access-Control-Allow-Origin", value: process.env.CORS_ORIGINS || "*" },
+          { key: "Content-Security-Policy", value: `frame-ancestors ${frameAncestors};` },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "Access-Control-Allow-Origin", value: corsOrigin },
+          { key: "Access-Control-Allow-Credentials", value: "true" },
           { key: "Access-Control-Allow-Methods", value: "GET, POST, PUT, DELETE, OPTIONS" },
-          { key: "Access-Control-Allow-Headers", value: "*" },
+          { key: "Access-Control-Allow-Headers", value: "Content-Type, Authorization" },
         ],
       },
     ];

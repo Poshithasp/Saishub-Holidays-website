@@ -1,14 +1,28 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { verifyPassword, signToken } from '@/lib/auth'
+import { rateLimit, getClientIp } from '@/lib/rate-limit'
 
 export const dynamic = 'force-dynamic'
 
+const COOKIE_MAX_AGE = 60 * 60 * 8 // 8 hours (matches JWT_EXPIRES_IN default)
+
 // POST /api/admin/login  Body: { username, password }
-// On success: returns { token, admin } AND sets an `sh_token` cookie so
-// the Next.js middleware can enforce auth on /admin/* server-side.
+// On success: sets an HttpOnly `sh_token` cookie. The token is NEVER exposed to
+// client-side JavaScript — the cookie is sent automatically on same-origin
+// requests, and the Edge middleware enforces auth on /admin/* + /api/admin/*.
 export async function POST(request) {
   try {
+    // Brute-force protection: max 10 attempts / minute per IP.
+    const ip = getClientIp(request)
+    const rl = rateLimit(`login:${ip}`, { max: 10, windowMs: 60_000 })
+    if (!rl.ok) {
+      return NextResponse.json(
+        { error: 'Too many login attempts. Please try again in a minute.' },
+        { status: 429, headers: { 'Retry-After': String(rl.retryAfter) } },
+      )
+    }
+
     const { username, password } = await request.json().catch(() => ({}))
     if (!username || !password) {
       return NextResponse.json({ error: 'username and password are required' }, { status: 400 })
@@ -23,17 +37,16 @@ export async function POST(request) {
 
     const res = NextResponse.json({
       ok: true,
-      token,
       admin: { id: admin.id, username: admin.username, role: admin.role },
     })
 
-    // 7-day cookie — lets the middleware protect /admin/dashboard
+    // HttpOnly cookie — unreadable by JS, protects against XSS token theft.
     res.cookies.set('sh_token', token, {
-      httpOnly: false, // needs to be readable by client for /api/admin calls with Bearer
+      httpOnly: true,
       secure: true,
       sameSite: 'lax',
       path: '/',
-      maxAge: 60 * 60 * 24 * 7,
+      maxAge: COOKIE_MAX_AGE,
     })
     return res
   } catch (e) {
@@ -42,9 +55,15 @@ export async function POST(request) {
   }
 }
 
-// POST /api/admin/logout — clears the cookie (optional endpoint)
+// DELETE /api/admin/login — clears the cookie (logout)
 export async function DELETE() {
   const res = NextResponse.json({ ok: true })
-  res.cookies.set('sh_token', '', { path: '/', maxAge: 0 })
+  res.cookies.set('sh_token', '', {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 0,
+  })
   return res
 }

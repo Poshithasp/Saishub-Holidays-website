@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Lock, User, ArrowRight, Loader2, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
@@ -7,28 +7,18 @@ import api from '@/lib/api'
 
 export default function AdminLoginPage() {
   const router = useRouter()
-  const [username, setUsername] = useState('admin')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [err, setErr] = useState('')
-
-  useEffect(() => {
-    // If already logged in, jump to dashboard
-    if (typeof window !== 'undefined' && localStorage.getItem('sh_token')) {
-      router.replace('/admin/dashboard')
-    }
-  }, [router])
 
   const onSubmit = async (e) => {
     e.preventDefault()
     setErr(''); setLoading(true)
     try {
-      const res = await api.login(username, password)
-      localStorage.setItem('sh_token', res.token)
-      localStorage.setItem('sh_admin', JSON.stringify(res.admin))
-      // Also set cookie client-side so middleware picks it up on the next request
-      const week = 7 * 24 * 60 * 60
-      document.cookie = `sh_token=${res.token}; path=/; max-age=${week}; SameSite=Lax; Secure`
+      await api.login(username, password)
+      // The server sets an HttpOnly `sh_token` cookie; middleware will now
+      // allow access to the dashboard. Nothing is stored in JS.
       router.replace('/admin/dashboard')
     } catch (e) {
       setErr(e.message || 'Login failed')
@@ -70,7 +60,6 @@ export default function AdminLoginPage() {
           <button type="submit" disabled={loading} className="btn-primary rounded-full px-6 py-3 text-sm font-semibold flex items-center justify-center gap-2 w-full disabled:opacity-70">
             {loading ? <>Signing in <Loader2 className="w-4 h-4 animate-spin"/></> : <>Sign in <ArrowRight className="w-4 h-4"/></>}
           </button>
-          <div className="text-xs text-slate-500 text-center pt-2">Default: admin / admin123</div>
         </form>
       </div>
     </div>
