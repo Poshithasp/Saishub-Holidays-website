@@ -54,16 +54,16 @@ function DestinationChip({ name, img, active, onClick }) {
 }
 
 const DESTINATIONS = [
-  { name: 'Mysore', match: ['mysore'], img: 'https://images.unsplash.com/photo-1570814671169-ce8f91015ffe?crop=entropy&cs=srgb&fm=jpg&q=85' },
-  { name: 'Ooty', match: ['ooty','coonoor'], img: 'https://images.pexels.com/photos/7079773/pexels-photo-7079773.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940' },
-  { name: 'Kerala', match: ['munnar','alleppey','cochin'], img: 'https://images.unsplash.com/photo-1523496922380-91d5afba98a3?crop=entropy&cs=srgb&fm=jpg&q=85' },
-  { name: 'Hyderabad', match: ['hyderabad','ramoji'], img: 'https://images.unsplash.com/photo-1570814671169-ce8f91015ffe?crop=entropy&cs=srgb&fm=jpg&q=85' },
-  { name: 'Delhi • Agra • Jaipur', match: ['delhi','agra','jaipur'], img: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?crop=entropy&cs=srgb&fm=jpg&q=85' },
-  { name: 'Tirupati', match: ['tirupati','srikalahasti'], img: 'https://images.unsplash.com/photo-1603766806347-54cdf3745953?crop=entropy&cs=srgb&fm=jpg&q=85' },
-  { name: 'Rameshwaram', match: ['rameshwaram','madurai'], img: 'https://images.pexels.com/photos/37936887/pexels-photo-37936887.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940' },
-  { name: 'Kanyakumari', match: ['kanyakumari'], img: 'https://images.pexels.com/photos/12752175/pexels-photo-12752175.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940' },
-  { name: 'Shirdi • Nashik', match: ['shirdi','nashik','shani'], img: 'https://images.unsplash.com/photo-1524443169398-9aa1ceab67d5?crop=entropy&cs=srgb&fm=jpg&q=85' },
-  { name: 'Varanasi • Ayodhya', match: ['varanasi','gaya','prayagraj','ayodhya'], img: 'https://images.unsplash.com/photo-1573352763925-82bd5dfc31d1?crop=entropy&cs=srgb&fm=jpg&q=85' },
+  { name: 'Mysore', match: ['mysore'], img: '/images/packages/mysore.jpg' },
+  { name: 'Ooty', match: ['ooty','coonoor'], img: '/images/packages/ooty.jpg' },
+  { name: 'Kerala', match: ['munnar','alleppey','cochin'], img: '/images/packages/kerala.webp' },
+  { name: 'Hyderabad', match: ['hyderabad','ramoji'], img: '/images/packages/hyderabad.webp' },
+  { name: 'Delhi • Agra • Jaipur', match: ['delhi','agra','jaipur'], img: '/images/packages/delhi.jpg' },
+  { name: 'Tirupati', match: ['tirupati','srikalahasti'], img: '/images/packages/tirupati.jpg' },
+  { name: 'Rameshwaram', match: ['rameshwaram','madurai'], img: '/images/packages/rameshwaram.jpg' },
+  { name: 'Kanyakumari', match: ['kanyakumari'], img: '/images/packages/kanyakumari.jpg' },
+  { name: 'Shirdi • Nashik', match: ['shirdi','nashik','shani'], img: '/images/packages/shirdi.jpg' },
+  { name: 'Varanasi • Ayodhya', match: ['varanasi','gaya','prayagraj','ayodhya'], img: '/images/packages/varanasi.jpg' },
 ]
 
 /* ---------------- Traveller counter ---------------- */
