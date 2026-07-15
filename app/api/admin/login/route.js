@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { verifyPassword, signToken } from '@/lib/auth'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
+import { ensureSeeded } from '@/lib/ensureSeed'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,6 +14,9 @@ const COOKIE_MAX_AGE = 60 * 60 * 8 // 8 hours (matches JWT_EXPIRES_IN default)
 // requests, and the Edge middleware enforces auth on /admin/* + /api/admin/*.
 export async function POST(request) {
   try {
+    // Ensure the admin account exists on a fresh database before authenticating.
+    await ensureSeeded()
+
     // Brute-force protection: max 10 attempts / minute per IP.
     const ip = getClientIp(request)
     const rl = rateLimit(`login:${ip}`, { max: 10, windowMs: 60_000 })

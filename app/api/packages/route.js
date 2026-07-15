@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { ensureSeeded } from '@/lib/ensureSeed'
 
 export const dynamic = 'force-dynamic'
 
@@ -9,6 +10,9 @@ export const dynamic = 'force-dynamic'
 //   ?active=true (default) | false | all
 export async function GET(request) {
   try {
+    // Populate a fresh (e.g. production) database on first use. No-op once seeded.
+    await ensureSeeded()
+
     const { searchParams } = new URL(request.url)
     const category = searchParams.get('category')
     const activeParam = (searchParams.get('active') || 'true').toLowerCase()
