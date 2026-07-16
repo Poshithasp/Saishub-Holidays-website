@@ -4,16 +4,16 @@ import { Plane, Sparkles, HeartHandshake, Compass, ShieldCheck, Award } from 'lu
 import PageShell from '@/components/PageShell'
 
 const MILESTONES = [
-  { year: '2020', title: 'The Dream Begins', desc: 'Founded in Bengaluru with a mission to make travel personal and effortless for every family.' },
-  { year: '2021', title: 'First 100 Journeys', desc: 'Curated over 100 memorable trips across India, from Himalayan escapes to coastal getaways.' },
-  { year: '2023', title: 'Global Wings', desc: 'Launched international departures to Europe, Southeast Asia and the Middle East.' },
-  { year: '2024', title: 'Sacred Yatras', desc: 'Dedicated pilgrimage division — Char Dham, Kashi, Tirupati, and more, with spiritual care.' },
+  { year: '2016', title: 'The Dream Begins', desc: 'Founded in Bengaluru with a mission to make travel personal and effortless for every family.' },
+  { year: '2018', title: 'First 100 Journeys', desc: 'Curated over 100 memorable trips across India, from Himalayan escapes to coastal getaways.' },
+  { year: '2020', title: 'Global Wings', desc: 'Launched international departures to Europe, Southeast Asia and the Middle East.' },
+  { year: '2023', title: 'Sacred Yatras', desc: 'Dedicated pilgrimage division — Char Dham, Kashi, Tirupati, and more, with spiritual care.' },
   { year: '2026', title: '2500+ Happy Travellers', desc: 'A growing family of travellers who trust Saishub Holidays to craft their most beautiful memories.' },
 ]
 
 export default function AboutPage() {
   return (
-    <PageShell eyebrow="About Saishub Holidays" title={<>Crafting <span className="gold-script font-serif-alt italic">Journeys</span> Since 2020</>} subtitle="We are a Bengaluru-based luxury travel house on a simple mission — to design journeys that stay with you forever. Every itinerary is hand-woven with care.">
+    <PageShell eyebrow="About Saishub Holidays" title={<>Crafting <span className="gold-script font-serif-alt italic">Journeys</span> Since 2016</>} subtitle="We are a Bengaluru-based luxury travel house on a simple mission — to design journeys that stay with you forever. Every itinerary is hand-woven with care.">
       <div className="max-w-[1400px] mx-auto px-6 md:px-10 grid lg:grid-cols-2 gap-14 items-center pt-6">
         <motion.div initial={{opacity:0,y:20}} whileInView={{opacity:1,y:0}} viewport={{once:true}} className="glass rounded-3xl p-8">
           <div className="font-display text-3xl md:text-4xl text-emerald-900 font-bold">Our Story</div>
@@ -21,9 +21,7 @@ export default function AboutPage() {
           <p className="mt-4 text-slate-700 leading-relaxed">Today, we curate journeys across India and around the world — from sacred pilgrimages to luxury getaways — with a small, passionate team obsessed with the smallest details.</p>
           <div className="mt-6 grid grid-cols-2 gap-4">
             {[
-              {icon: Award, t: 'IATA Certified', s: 'Trusted travel partner'},
               {icon: HeartHandshake, t: '2500+ Families', s: 'Have travelled with us'},
-              {icon: Compass, t: '80+ Destinations', s: 'Across the globe'},
               {icon: ShieldCheck, t: 'Safe & Insured', s: 'Peace of mind travel'},
             ].map((v,i)=>(
               <div key={i} className="flex items-center gap-3">
